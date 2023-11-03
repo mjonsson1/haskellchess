@@ -182,3 +182,21 @@ createChessBoardWhite sz n board = unlines $ intersperse separator rows
 main = putStrLn $ createChessBoardBlack 8 8 initialBoard
 
 
+-- given a piece and a position, return ALL POSSIBLE positions to move that piece.
+generateMoves :: (Position, Piece) -> [Position]
+generateMoves = undefined
+
+
+-- filter all possible moves into only legal moves 
+legalMoves :: Board -> (Position, Piece) -> [Position]
+legalMoves (x, y) piece = undefined
+
+
+-- given a board and a king position, determine if the king has any legal moves.
+isCheckMate :: Board -> Position -> Bool
+isCheckMate = undefined
+
+
+-- from all legal moves, make a move for a color and return a new board.
+makeMove :: Board -> Color -> Board
+
