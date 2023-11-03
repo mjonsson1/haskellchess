@@ -187,7 +187,7 @@ generateMoves :: (Position, Piece) -> [Position]
 generateMoves = undefined
 
 
--- filter all possible moves into only legal moves 
+-- filter all possible moves for a given piece into only legal moves 
 legalMoves :: Board -> (Position, Piece) -> [Position]
 legalMoves (x, y) piece = undefined
 
@@ -197,6 +197,11 @@ isCheckMate :: Board -> Position -> Bool
 isCheckMate = undefined
 
 
+-- generate all legal moves for a given color on a given turn
+allLegalMoves :: Board -> Color -> [((Position, Piece, [Position]))]
+allLegalMoves = undefined
+
 -- from all legal moves, make a move for a color and return a new board.
 makeMove :: Board -> Color -> Board
+makeMove = undefined
 
