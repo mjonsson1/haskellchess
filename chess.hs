@@ -61,6 +61,9 @@ initialBoard = [((1, 1), (Rook, White)),
                 ((7, 8), (Knight, Black)),
                 ((8, 8), (Rook, Black))
                 ]
+{- in pseudo code
+    board = update (prev board)
+-}
 
 showPiece :: Piece -> String
 showPiece (Rook, Black) = " ♖ "
@@ -113,8 +116,9 @@ showBoardWhite board =
 --Notes from Marco
 
 -- I think we need to specify which turn we're on to ensure the right board generates automatically, main just generates White for now.
-turn :: Side -> Int
-turn = undefined
+turn :: Int -> Side
+turn n = if (odd n) then White else Black
+
 
 --Marco
 
@@ -124,15 +128,43 @@ generatePawnMoves ((x,y), (Pawn, side)) board =
             White -> [(x, y+1)|y+1 <= 8, isNothing (lookup (x,y+1) board)]
             Black -> [(x, y - 1) | y - 1 >= 1, isNothing (lookup (x, y - 1) board)]
         pushTwice = case side of
-            White -> [(x,y+2)|y+2 <= 8, isNothing (lookup (x,y-2) board)]
-            Black -> [(x,y-2) | y-2 >= 1, isNothing (lookup(x,y-2) board)]
+            White -> [(x,y+2)| y+2 <= 8, isNothing (lookup (x,y-2) board), y==2]
+            Black -> [(x,y-2) | y-2 >= 1, isNothing (lookup(x,y-2) board), y==7]
         captures = case side of
             White -> [(x+dx,y+1) | dx <- [-1,1], x+dx >= 1, x+dx <= 8, isSomething (lookup (x+dx,y+1) board)]
-            Black -> [(x+dx,y-1)| dx <- [-1,1], x+dx >= 1, x+dx <= 8, isSomething (lookup(x+dx,y-1) board)]
+            Black -> [(x+dx,y-1)| dx <- [-1,1], x+dx >= 1, x+dx <= 8, isSomething (lookup (x+dx,y-1) board)]
         in pushOnce ++ pushTwice ++ captures
 
+generateBishopMoves :: (Pos,Piece) -> Board -> [Pos]
+generateBishopMoves ((x,y), (Bishop, side)) board = 
+        let downLeftDiagonalMoves = case side of
+                Black -> [(x-i,y-i)|i <- [0..8], x-i <= 8, x-i>= 1, y-i<= 8, y-i >= 1]
+                White -> [(x-i,y-i)|i <- [0..8], x-i <= 8, x-i>= 1, y-i<= 8, y-i >= 1]
+            downRightDiagonalMoves = case side of
+                Black -> [(x+i,y-i)|i <- [0..8], x+i <= 8, x+i>= 1, y-i<= 8, y-i >= 1]
+                White -> [(x+i,y-i)|i <- [0..8], x+i <= 8, x+i>= 1, y-i<= 8, y-i >= 1]
+            upLeftDiagonalMoves = case side of
+                Black -> [(x-i,y+i)|i <- [0..8], x-i <= 8, x-i>= 1, y+i<= 8, y+i >= 1]
+                White -> [(x-i,y+i)|i <- [0..8], x-i <= 8, x-i>= 1, y+i<= 8, y+i >= 1]
+            upRightDiagonalMoves = case side of
+                Black -> [(x+i,y+i)|i <- [0..8], x+i <= 8, x+i>= 1, y+i<= 8, y+i >= 1]
+                White -> [(x+i,y+i)|i <- [0..8], x+i <= 8, x+i>= 1, y+i<= 8, y+i >= 1]
+            in nub (downLeftDiagonalMoves ++ downRightDiagonalMoves ++ upLeftDiagonalMoves ++ upRightDiagonalMoves)
+--Need to add optimization for checking for collisions
 
+generateRookMoves :: (Pos,Piece) -> Board -> [Pos]
+generateRookMoves ((x,y), (Rook, side)) board = 
+        let verticalMoves = case side of
+                Black -> [(x,y+i)|i<-[-8..8], x <= 8, x>= 1, y+i <= 8, y+i>= 1]
+                White -> [(x,y+i)|i<-[-8..8], x <= 8, x>= 1, y+i <= 8, y+i>= 1]
+            horizontalMoves = case side of
+                Black -> [(x+i,y)|i<-[-8..8], x+i <= 8, x+i >= 1, y <= 8, y>= 1]
+                White -> [(x+i,y)|i<-[-8..8], x+i <= 8, x+i >= 1, y <= 8, y>= 1]
+        in nub (verticalMoves ++horizontalMoves)
 --check if empty
+
+--lookup takes in a coordinate and outputs a piece tuple, 
+--need to define a function to do the reverse, so that we can find the input position values to generate movess
 isNothing :: Maybe a -> Bool
 isNothing Nothing = True
 isNothing (Just _) = False
@@ -142,7 +174,8 @@ isSomething (Just _) = True
 isSomething Nothing = False
 
 --LEVI
-main = putStrLn $ showBoard initialBoard White
+main =
+    putStrLn $ showBoard initialBoard White
 
 --NATE
 -- given a piece and a position, return ALL POSSIBLE positions to move that piece (respecting bounds).
