@@ -142,3 +142,6 @@ makeMove :: Board -> Move -> Board
 makeMove = undefined
 
 
+--Notes from Marco
+
+-- I think we need to specify which turn we're on to ensure the right board generates automatically, main just generates White for now.
