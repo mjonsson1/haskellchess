@@ -99,16 +99,16 @@ showBoardBlack :: Board -> String
 showBoardBlack board = 
     let rows = [showRow y Black board | y <- [1..8]]
         separator = "   " ++ replicate (31) '-'
-        letterLine = concat $ intersperse "   " ["", "H", "G", "F", "E", "D", "C", "B", "A"]
-    in unlines (intersperse separator rows) ++ "\n " ++ letterLine
+        coordinateLine = concat $ intersperse "   " ["", "8", "7", "6", "5", "4", "3", "2", "1"]
+    in unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
 
 -- Converts a board to a string from white's perspective (white is on the bottom).
 showBoardWhite :: Board -> String
 showBoardWhite board = 
     let rows = [showRow y White board | y <- [8, 7..1]]
         separator = "   " ++ replicate (31) '-'
-        letterLine = concat $ intersperse "   " ["", "A", "B", "C", "D", "E", "F", "G", "H"]
-    in unlines (intersperse separator rows) ++ "\n " ++ letterLine
+        coordinateLine = concat $ intersperse "   " ["", "1", "2", "3", "4", "5", "6", "7", "8"]
+    in unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
 
 --Notes from Marco
 
