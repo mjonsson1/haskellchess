@@ -8,7 +8,7 @@ import Data.List
 data PieceType = Pawn | King | Bishop | Knight | Queen | Rook deriving (Show, Eq)
 data Side = Black | White deriving (Show, Eq)
 
-type Pos = (Int, Int) -- (x, y)
+type Pos = (Int, Int) -- (x, y) 
 
 --to keep track of each piece
 type Piece = (PieceType, Side)
@@ -107,6 +107,36 @@ showBoardWhite board =
         separator = replicate (31) '-'
     in unlines $ intersperse separator rows
 
+--Notes from Marco
+
+-- I think we need to specify which turn we're on to ensure the right board generates automatically, main just generates White for now.
+turn :: Side -> Int
+turn = undefined
+
+--Marco
+
+generatePawnMoves :: (Pos,Piece) -> Board -> [Pos]
+generatePawnMoves ((x,y), (Pawn, side)) board = 
+    let pushOnce = case side of
+            White -> [(x, y+1)|y+1 <= 8, isNothing (lookup (x,y+1) board)]
+            Black -> [(x, y - 1) | y - 1 >= 1, isNothing (lookup (x, y - 1) board)]
+        pushTwice = case side of
+            White -> [(x,y+2)|y+2 <= 8, isNothing (lookup (x,y-2) board)]
+            Black -> [(x,y-2) | y-2 >= 1, isNothing (lookup(x,y-2) board)]
+        captures = case side of
+            White -> [(x+dx,y+1) | dx <- [-1,1], x+dx >= 1, x+dx <= 8, isSomething (lookup (x+dx,y+1) board)]
+            Black -> [(x+dx,y-1)| dx <- [-1,1], x+dx >= 1, x+dx <= 8, isSomething (lookup(x+dx,y-1) board)]
+        in pushOnce ++ pushTwice ++ captures
+
+
+--check if empty
+isNothing :: Maybe a -> Bool
+isNothing Nothing = True
+isNothing (Just _) = False
+--Check if not empty
+isSomething :: Maybe a -> Bool
+isSomething (Just _) = True
+isSomething Nothing = False
 
 --LEVI
 main = putStrLn $ showBoard initialBoard White
@@ -142,6 +172,3 @@ makeMove :: Board -> Move -> Board
 makeMove = undefined
 
 
---Notes from Marco
-
--- I think we need to specify which turn we're on to ensure the right board generates automatically, main just generates White for now.
