@@ -77,35 +77,38 @@ showPiece (King, White) = " ♚ "
 showPiece (Pawn, White) = " ♟ "
 
 
---AIDEN: ALL THE SHOW BOARD
--- Function to create a single row of the chessboard with rooks
+-- Returns a string representing specified row on the board
 showRow :: Int -> Side -> Board -> String
-showRow y White board = concat $ intersperse "|" [getPiece (x,y) board | x <- [1..8]]
-showRow y Black board = concat $ intersperse "|" [getPiece (x,y) board | x <- [8, 7..1]]
+showRow y White board = concat $ [show y, "  "] ++ intersperse "|" [getPiece (x,y) board | x <- [1..8]]
+showRow y Black board = concat $ [show y, "  "] ++ intersperse "|" [getPiece (x,y) board | x <- [8, 7..1]]
 
---TODO: Change
+-- Returns a string of the piece symbol at the given location on the board
 getPiece :: Pos -> Board -> String
 getPiece pos board = case lookup pos board of
                         Just piece -> showPiece piece
                         Nothing -> "   "
 
---TODO: Fix, function takes in board, the current side that's playing and print the respective board
+-- Converts a board to a string when printed to output. 
+-- If not printed to output, newlines and pieces are not displayed properly. 
 showBoard :: Board -> Side -> String
 showBoard board Black = showBoardBlack board
 showBoard board White = showBoardWhite board
 
--- Function to create the chessboard with n rows and n columns
+-- Converts a board to a string from black's perspective (black is on the bottom).
 showBoardBlack :: Board -> String
 showBoardBlack board = 
     let rows = [showRow y Black board | y <- [1..8]]
-        separator = replicate (31) '-'
-    in unlines $ intersperse separator rows
+        separator = "   " ++ replicate (31) '-'
+        letterLine = concat $ intersperse "   " ["", "H", "G", "F", "E", "D", "C", "B", "A"]
+    in unlines (intersperse separator rows) ++ "\n " ++ letterLine
 
+-- Converts a board to a string from white's perspective (white is on the bottom).
 showBoardWhite :: Board -> String
 showBoardWhite board = 
     let rows = [showRow y White board | y <- [8, 7..1]]
-        separator = replicate (31) '-'
-    in unlines $ intersperse separator rows
+        separator = "   " ++ replicate (31) '-'
+        letterLine = concat $ intersperse "   " ["", "A", "B", "C", "D", "E", "F", "G", "H"]
+    in unlines (intersperse separator rows) ++ "\n " ++ letterLine
 
 --Notes from Marco
 
