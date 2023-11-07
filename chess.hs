@@ -20,7 +20,7 @@ type Square = (Pos, Piece)
 type Board = [Square]
 
 --maybe isCheck, isCheckMate
-type Move = (Pos, Pos)
+type Move = (Square, Pos)
 
 -- (currentBoard, currentSideTurn)
 type Game = (Board, Side)

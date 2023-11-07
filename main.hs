@@ -31,6 +31,7 @@ readMove line =
     --check if input is two strings 
     in case split of 
         [first, sec] -> readPos (toLowerString first, toLowerString sec)
+        
         _            -> Nothing   
 
 recurReadInput :: Side -> Board -> IO()
