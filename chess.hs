@@ -1,4 +1,6 @@
 
+module Chess where
+    
 import Data.Char
 import Data.List
 import Text.XHtml (rows)
@@ -18,7 +20,7 @@ type Square = (Pos, Piece)
 type Board = [Square]
 
 --maybe isCheck, isCheckMate
-type Move = (Square, Pos)
+type Move = (Pos, Pos)
 
 -- (currentBoard, currentSideTurn)
 type Game = (Board, Side)
@@ -83,6 +85,9 @@ showRow :: Int -> Side -> Board -> String
 showRow y White board = concat $ intersperse "|" [getPiece (x,y) board | x <- [1..8]]
 showRow y Black board = concat $ intersperse "|" [getPiece (x,y) board | x <- [8, 7..1]]
 
+getActualPiece :: Pos -> Board -> Maybe Piece
+getActualPiece pos board = lookup pos board
+
 --TODO: Change
 getPiece :: Pos -> Board -> String
 getPiece pos board = case lookup pos board of
@@ -109,7 +114,7 @@ showBoardWhite board =
 
 
 --LEVI
-main = putStrLn $ showBoard initialBoard White
+-- main = putStrLn $ showBoard initialBoard White
 
 --NATE
 -- given a piece and a position, return ALL POSSIBLE positions to move that piece (respecting bounds).
@@ -121,6 +126,16 @@ generateMoves ((x,y), (Pawn, Black)) = undefined
 -- filter all possible moves for a given piece into only legal moves 
 legalMoves :: Board -> (Pos, Piece) -> [Pos]
 legalMoves board ((x, y), piece) = undefined
+
+isLegalMove :: Move -> Board -> Bool
+isLegalMove ((startX, startY), (endX, endY)) board = 
+    case getActualPiece (startX, startY) board of
+        Nothing -> False
+            -- p :: Piece
+        Just p -> 
+            let pLegalMoves :: [Pos]
+                pLegalMoves = legalMoves board ((startX, startY), p) 
+            in (endX, endY) `elem` pLegalMoves
 
 --OPTIMIZATION NOTES:
 --IF A MOVE MAKES A KING VULNERABLE --> NOT LEGAL
