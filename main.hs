@@ -25,7 +25,7 @@ readPos _ = Nothing
 
 
 readMove :: String -> Board -> Maybe Move
-readMove line =  
+readMove line board =  
     let split :: [String]
         split = filter (not . null) (words line)
     --check if input is two strings 
@@ -33,7 +33,7 @@ readMove line =
         [first, sec] -> 
             case readPos (toLowerString first, toLowerString sec) of
                 --if the input format is not "e2 e4" --> return Nothing
-                Nothing -> 
+                Nothing -> Nothing
                 Just ((x,y), (x1,y1)) ->
                     let maybeP = lookup (x,y) board
                     in case maybeP of
@@ -53,8 +53,8 @@ recurReadInput turn board = do
         Just move@(((x,y),(pType, side)),(x1,y1)) -> 
             if side /= turn
             then do
-                        putStrLn "Can not move opponent piece, try again: "
-                        recurReadInput turn board
+                putStrLn "Can not move opponent piece, try again: "
+                recurReadInput turn board
             else do
                 if isLegalMove board move
                 then do
@@ -64,24 +64,8 @@ recurReadInput turn board = do
                     else startTurn White newBoard
                 else do
                     putStrLn "This is not a valid move, try again: "
-                            recurReadInput turn board
+                    recurReadInput turn board
                 --this is the piece that is being moved
-                Just (pType, side) ->
-                    if side /= turn
-                    then do
-                        putStrLn "Can not move opponent piece, try again: "
-                        recurReadInput turn board
-                    else do
-                        if (isLegalMove ((startX, startY), (endX, endY)) board)
-                        then do
-                            putStrLn "insert move function here"
-                            let newBoard = board
-                            if turn == White
-                            then startTurn Black newBoard
-                            else startTurn White newBoard
-                        else do
-                            putStrLn "This is not a valid move, try again: "
-                            recurReadInput turn board
 
 --print the current turn's board and recursively ask for input
 startTurn :: Side -> Board -> IO()
