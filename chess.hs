@@ -127,15 +127,6 @@ generateMoves ((x,y), (Pawn, Black)) = undefined
 legalMoves :: Board -> (Pos, Piece) -> [Pos]
 legalMoves board ((x, y), piece) = undefined
 
-isLegalMove :: Move -> Board -> Bool
-isLegalMove ((startX, startY), (endX, endY)) board = 
-    case getActualPiece (startX, startY) board of
-        Nothing -> False
-            -- p :: Piece
-        Just p -> 
-            let pLegalMoves :: [Pos]
-                pLegalMoves = legalMoves board ((startX, startY), p) 
-            in (endX, endY) `elem` pLegalMoves
 
 --OPTIMIZATION NOTES:
 --IF A MOVE MAKES A KING VULNERABLE --> NOT LEGAL

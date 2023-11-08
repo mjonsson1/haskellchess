@@ -24,28 +24,47 @@ readPos ([letter1, num1], [letter2, num2]) =
 readPos _ = Nothing
 
 
-readMove :: String -> Maybe Move
+readMove :: String -> Board -> Maybe Move
 readMove line =  
     let split :: [String]
         split = filter (not . null) (words line)
     --check if input is two strings 
     in case split of 
-        [first, sec] -> readPos (toLowerString first, toLowerString sec)
-        
+        [first, sec] -> 
+            case readPos (toLowerString first, toLowerString sec) of
+                --if the input format is not "e2 e4" --> return Nothing
+                Nothing -> 
+                Just ((x,y), (x1,y1)) ->
+                    let maybeP = lookup (x,y) board
+                    in case maybeP of
+                        --if there is no piece at the start
+                        Nothing -> Nothing
+                        Just p -> Just (((x,y), p), (x1,y1)) 
+        -- if the input format is not two strings
         _            -> Nothing   
 
 recurReadInput :: Side -> Board -> IO()
 recurReadInput turn board = do
-    move <- getLine
-    case readMove move of 
+    moveStr <- getLine
+    case readMove moveStr board of 
         Nothing -> do
             putStrLn "Invalid input. Please enter a valid input (in format: d2 d4): "
             recurReadInput turn board
-        Just ((startX, startY), (endX, endY))  -> do
-            case getActualPiece (startX, startY) board of
-                Nothing -> do
-                    putStrLn "Moving from an empty square, try again: "
-                    recurReadInput turn board
+        Just move@(((x,y),(pType, side)),(x1,y1)) -> 
+            if side /= turn
+            then do
+                        putStrLn "Can not move opponent piece, try again: "
+                        recurReadInput turn board
+            else do
+                if isLegalMove board move
+                then do
+                    let newBoard = makeMove board move
+                    if turn == White
+                    then startTurn Black newBoard
+                    else startTurn White newBoard
+                else do
+                    putStrLn "This is not a valid move, try again: "
+                            recurReadInput turn board
                 --this is the piece that is being moved
                 Just (pType, side) ->
                     if side /= turn
