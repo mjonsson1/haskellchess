@@ -1,3 +1,4 @@
+import Moves
 import Chess
 import Data.Char (toLower)
 
@@ -77,7 +78,7 @@ startTurn turn board = do
 
 main :: IO()
 main = do
-    startTurn White testBishop
+    startTurn White initialBoard
 
 testBishop :: Board
 testBishop = [((1, 1), (Rook, White)),
@@ -94,7 +95,6 @@ testBishop = [((1, 1), (Rook, White)),
                 ((3, 2), (Pawn, White)),
                 ((4, 2), (Pawn, White)),
                 ((5, 2), (Pawn, White)),
-                -- ((5, 3), (Pawn, White)),
                 ((6, 2), (Pawn, White)),
                 ((7, 2), (Pawn, White)),
                 ((8, 2), (Pawn, White)),
