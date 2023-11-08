@@ -1,4 +1,6 @@
 
+module Chess where
+    
 import Data.Char
 import Data.List
 import Text.XHtml (rows)
@@ -84,7 +86,6 @@ showPiece (Pawn, White) = " ♟ "
 showRow :: Int -> Side -> Board -> String
 showRow y White board = concat $ [show y, "  "] ++ intersperse "|" [getPiece (x,y) board | x <- [1..8]]
 showRow y Black board = concat $ [show y, "  "] ++ intersperse "|" [getPiece (x,y) board | x <- [8, 7..1]]
-
 -- Returns a string of the piece symbol at the given location on the board
 getPiece :: Pos -> Board -> String
 getPiece pos board = case lookup pos board of
@@ -220,6 +221,7 @@ legalMoves :: Board -> (Pos, Piece) -> [Pos]
 legalMoves board ((x, y), (Pawn, side)) = undefined
 legalMoves board ((x,y), (Rook, side)) = filter (\pos -> isLegalMove board (((x,y), (Rook, side)),pos)) (generateMoves ((x,y), (Rook, side)))
 legalMoves board ((x,y), (Bishop, side)) = filter (\pos -> isLegalMove board (((x,y), (Bishop, side)),pos)) (generateMoves ((x,y), (Bishop, side)))
+
 
 
 --OPTIMIZATION NOTES:
