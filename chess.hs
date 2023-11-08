@@ -103,7 +103,7 @@ showBoardBlack :: Board -> String
 showBoardBlack board = 
     let rows = [showRow y Black board | y <- [1..8]]
         separator = "   " ++ replicate (31) '-'
-        coordinateLine = concat $ intersperse "   " ["", "8", "7", "6", "5", "4", "3", "2", "1"]
+        coordinateLine = concat $ intersperse "   " ["", "h", "g", "f", "e", "d", "c", "b", "a"]
     in unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
 
 -- Converts a board to a string from white's perspective (white is on the bottom).
@@ -111,7 +111,7 @@ showBoardWhite :: Board -> String
 showBoardWhite board = 
     let rows = [showRow y White board | y <- [8, 7..1]]
         separator = "   " ++ replicate (31) '-'
-        coordinateLine = concat $ intersperse "   " ["", "1", "2", "3", "4", "5", "6", "7", "8"]
+        coordinateLine = concat $ intersperse "   " ["", "a", "b", "c", "d", "e", "f", "g", "h"]
     in unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
 
 
@@ -233,13 +233,16 @@ win :: Board -> Maybe Side
 win = undefined
 
 
---MAHAD
 -- you take in a board and a move, then return a new board after the change
 makeMove :: Board -> Move -> Board
-makeMove = undefined
+makeMove board (fromSquare, toPos) = 
+    let updatedBoard = [(pos, piece) | (pos, piece) <- board, pos /= fst fromSquare]
+    in (toPos, snd fromSquare) : updatedBoard
 
 
 -- for the solver, not do yet
 -- generate all legal moves for a given color on a given turn
 allLegalMoves :: Board -> Side -> [((Pos, Piece, [Pos]))]
 allLegalMoves = undefined
+
+
