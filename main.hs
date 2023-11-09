@@ -2,6 +2,7 @@ import Chess
 import Data.Char (toLower)
 import Moves
 
+
 toLowerString :: String -> String
 toLowerString = map toLower
 
@@ -69,15 +70,21 @@ recurReadInput turn board = do
 startTurn :: Side -> Board -> IO ()
 startTurn turn board = do
   putStrLn $ showBoard board turn
-  putStrLn ("Enter move for " ++ (toLowerString (show turn)) ++ " (in format: d2 d4): ")
-  recurReadInput turn board
+  if win board == Nothing then do
+    putStrLn ("Enter move for " ++ (toLowerString (show turn)) ++ " (in format: d2 d4): ")
+    recurReadInput turn board 
+  else do 
+    putStrLn(show (win board) ++ " is the winner!")
 
 main :: IO ()
 main = do
   startTurn White initialBoard
 
-
+{-
+testPawn :: [((GHC.Types.Any, GHC.Types.Any), (PieceType, Side))]
 testPawn =
   [ ((3, 2), (Pawn, White)),
     ((1, 7), (Pawn, Black))
   ]
+
+  -}

@@ -6,14 +6,14 @@ import Chess
 inBound :: Int -> Bool
 inBound x = x >= 1 && x <= 8
 --keep going in one direction until hit something with the same side or after capture an enemy
-recurAdd :: Board -> Side -> (Int, Int) -> (Int, Int) -> [Pos]
-recurAdd board side (currentX, currentY) (ix, iy) --ix, iy are offsets -> a num in [-1..1]
+recurCheckPath :: Board -> Side -> (Int, Int) -> (Int, Int) -> [Pos]
+recurCheckPath board side (currentX, currentY) (ix, iy) --ix, iy are offsets -> a num in [-1..1]
   | not (inBound (currentX + ix) && inBound (currentY + iy)) = []
   | otherwise =
       let nextPos = (currentX + ix, currentY + iy)
           nextMaybePiece = lookup nextPos board
         in if isNothing nextMaybePiece
-            then nextPos : recurAdd board side nextPos (ix, iy)
+            then nextPos : recurCheckPath board side nextPos (ix, iy)
             else case side of
               White ->
                 if isWhite nextMaybePiece
@@ -28,30 +28,30 @@ recurAdd board side (currentX, currentY) (ix, iy) --ix, iy are offsets -> a num 
 allLegalMoves :: Square -> Board -> [Move]
 -- BISHOP
 allLegalMoves square@((x, y), (Bishop, side)) board =
-  let upLeft = recurAdd board side (x,y) (-1, 1)
-      upRight = recurAdd board side (x,y) (1, 1)
-      downLeft = recurAdd board side (x,y) (-1, -1)
-      downRight = recurAdd board side (x,y) (1, -1)
+  let upLeft = recurCheckPath board side (x,y) (-1, 1)
+      upRight = recurCheckPath board side (x,y) (1, 1)
+      downLeft = recurCheckPath board side (x,y) (-1, -1)
+      downRight = recurCheckPath board side (x,y) (1, -1)
       allPos = upLeft ++ upRight ++ downLeft ++ downRight
    in [(square, pos) | pos <- allPos]
 -- ROOK
 allLegalMoves square@((x, y), (Rook, side)) board =
-  let left = recurAdd board side (x,y) (-1, 0)
-      right = recurAdd board side (x,y) (1, 0)
-      up = recurAdd board side (x,y) (0, 1)
-      down = recurAdd board side (x,y) (0, -1)
+  let left = recurCheckPath board side (x,y) (-1, 0)
+      right = recurCheckPath board side (x,y) (1, 0)
+      up = recurCheckPath board side (x,y) (0, 1)
+      down = recurCheckPath board side (x,y) (0, -1)
       allPos = left ++ right ++ up ++ down
    in [(square, pos) | pos <- allPos]
 -- QUEEN
 allLegalMoves square@((x, y), (Queen, side)) board =
-  let left = recurAdd board side (x,y) (-1, 0)
-      right = recurAdd board side (x,y) (1, 0)
-      up = recurAdd board side (x,y) (0, 1)
-      down = recurAdd board side (x,y) (0, -1)
-      upLeft = recurAdd board side (x,y) (-1, 1)
-      upRight = recurAdd board side (x,y) (1, 1)
-      downLeft = recurAdd board side (x,y) (-1, -1)
-      downRight = recurAdd board side (x,y) (1, -1)
+  let left = recurCheckPath board side (x,y) (-1, 0)
+      right = recurCheckPath board side (x,y) (1, 0)
+      up = recurCheckPath board side (x,y) (0, 1)
+      down = recurCheckPath board side (x,y) (0, -1)
+      upLeft = recurCheckPath board side (x,y) (-1, 1)
+      upRight = recurCheckPath board side (x,y) (1, 1)
+      downLeft = recurCheckPath board side (x,y) (-1, -1)
+      downRight = recurCheckPath board side (x,y) (1, -1)
       allPos = left ++ right ++ up ++ down ++ upLeft ++ upRight ++ downLeft ++ downRight
    in [(square, pos) | pos <- allPos]
 -- KNIGHT
@@ -118,12 +118,15 @@ isBlack _ = False
 
 -- look for king, if still have both king --> return Nothing, otherwise return winning side
 win :: Board -> Maybe Side
-win = undefined
+win board = 
+  let   tmp = filter (\((_,_),(pType, _)) -> pType == King) board in
+        if length tmp /= 2 then Just (snd (snd (head tmp))) else Nothing
+
 
 -- you take in a board and a move, then return a new board after the change
 makeMove :: Board -> Move -> Maybe Board
 makeMove board move@(fromSquare, toPos)
   | move `notElem` (allLegalMoves fromSquare board) = Nothing
   | otherwise =
-      let updatedBoard = [(pos, piece) | (pos, piece) <- board, pos /= fst fromSquare]
+      let updatedBoard = [(pos, piece) | (pos, piece) <- board, pos /= fst fromSquare, pos /= toPos]
        in Just ((toPos, snd fromSquare) : updatedBoard)

@@ -18,6 +18,8 @@ type Board = [Square]
 
 type Move = (Square, Pos)
 
+type Winner = Maybe Side
+
 initialBoard :: Board
 -- change to Board type
 initialBoard =
@@ -54,7 +56,9 @@ initialBoard =
     ((7, 8), (Knight, Black)),
     ((8, 8), (Rook, Black))
   ]
-
+  
+emptyBoard::Board
+emptyBoard = []
 --                                        SHOWING BOARD
 
 showPiece :: Piece -> String
@@ -70,6 +74,7 @@ showPiece (Bishop, White) = " ♝ "
 showPiece (Queen, White) = " ♛ "
 showPiece (King, White) = " ♚ "
 showPiece (Pawn, White) = " ♟ "
+
 
 -- Returns a string representing specified row on the board
 showRow :: Int -> Side -> Board -> String
