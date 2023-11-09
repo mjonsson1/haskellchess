@@ -18,6 +18,8 @@ type Board = [Square]
 
 type Move = (Square, Pos)
 
+type Winner = Maybe Side
+
 initialBoard :: Board
 -- change to Board type
 initialBoard =
