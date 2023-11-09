@@ -89,7 +89,7 @@ allLegalMoves square@((x, y), (Pawn, White)) board =
 allLegalMoves square@((x, y), (Pawn, Black)) board =
   let pushOnce = [(x, y - 1) | inBound (y - 1), isNothing (lookup (x, y - 1) board)]
       pushTwice = [(x, y - 2) | y == 7, isNothing (lookup (x, y - 2) board), isNothing (lookup (x, y - 1) board)]
-      captures = [(x + dx, y - 1) | inBound (y - 1), dx <- [-1, 1], inBound (x + dx), isBlack (lookup (x + dx, y + 1) board)]
+      captures = [(x + dx, y - 1) | inBound (y - 1), dx <- [-1, 1], inBound (x + dx), isWhite (lookup (x + dx, y - 1) board)]
       allPos = pushOnce ++ pushTwice ++ captures
    in [(square, pos) | pos <- allPos]
 
