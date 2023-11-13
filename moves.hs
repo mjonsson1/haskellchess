@@ -1,28 +1,22 @@
 module Moves where
 import Data.List
 import Chess
+import Data.Maybe
 
 --                                                 HELPER FUNCTIONS
 inBound :: Int -> Bool
 inBound x = x >= 1 && x <= 8
---keep going in one direction until hit something with the same side or after capture an enemy
-recurCheckPath :: Board -> Side -> (Int, Int) -> (Int, Int) -> [Pos]
-recurCheckPath board side (currentX, currentY) (ix, iy) --ix, iy are offsets -> a num in [-1..1]
-  | not (inBound (currentX + ix) && inBound (currentY + iy)) = []
+
+
+
+recurCheckPath :: Board -> Side -> Pos -> (Int, Int) -> [Pos]
+recurCheckPath board side point dir --ix, iy are offsets -> a num in [-1..1]
+  | not  $ inBound  (fst newPoint)  && inBound  (snd newPoint)  = []
   | otherwise =
-      let nextPos = (currentX + ix, currentY + iy)
-          nextMaybePiece = lookup nextPos board
-        in if isNothing nextMaybePiece
-            then nextPos : recurCheckPath board side nextPos (ix, iy)
-            else case side of
-              White ->
-                if isWhite nextMaybePiece
-                  then []
-                  else [nextPos]
-              Black ->
-                if isBlack nextMaybePiece
-                  then []
-                  else [nextPos]
+      case lookup newPoint board of
+        Nothing -> newPoint : recurCheckPath board side (newPoint) dir
+        Just (piece, color) -> ([newPoint | color == opponent side])
+  where newPoint = offset point dir
 
 --                                            GENERATING ALL LEGAL MOVES
 allLegalMoves :: Square -> Board -> [Move]
@@ -55,6 +49,7 @@ allLegalMoves square@((x, y), (Queen, side)) board =
       allPos = left ++ right ++ up ++ down ++ upLeft ++ upRight ++ downLeft ++ downRight
    in [(square, pos) | pos <- allPos]
 -- KNIGHT
+
 allLegalMoves square@((x, y), (Knight, side)) board =
   let twoMove = [-2, 2]
       oneMove = [-1, 1]
@@ -66,7 +61,31 @@ allLegalMoves square@((x, y), (Knight, side)) board =
           in [(square, pos) | pos <- legalSquares]
         Black -> let legalSquares = filter (\pos -> not (isBlack (lookup pos board))) (vertical ++ horizontal)
           in [(square, pos) | pos <- legalSquares]
+
+--I rewrote this function for knight, but it does not operate as expected. FIX -Marco
+{-
+allLegalMoves square@((x, y), (Knight, side)) board =
+  let twoMove = [-2, 2]
+      oneMove = [-1, 1]
+      vertical :: [Pos]
+      vertical = [ (x + i, y + j) | i <- oneMove, inBound (x + i), j <- twoMove, inBound (y + j)]
+      horizontal = [ (x + j, y + i) | i <- oneMove, inBound (x + i), j <- twoMove, inBound (y + j)]
+      legalSquares = filter (\pos -> Just side == color (lookup pos board)) (vertical ++ horizontal)
+      in [(square, pos) | pos <- legalSquares]
+-}
+
 -- KING
+-- Also rewrote this one and it doesn't work as expected
+{-
+allLegalMoves square@((x, y), (King, side)) board =
+  let oneMove = [-1, 0, 1]
+      surrounding :: [Pos]
+      surrounding = [ (x + i, y + j) | i <- oneMove, inBound (x + i), j <- oneMove, inBound (y + j)]
+      surroundingWithoutStart = delete (x,y) surrounding
+      legalSquares = filter (\pos -> Just side == color (lookup pos board)) (surroundingWithoutStart)
+        in [(square, pos) | pos <- legalSquares]
+-}
+
 allLegalMoves square@((x, y), (King, side)) board =
   let oneMove = [-1, 0, 1]
       surrounding :: [Pos]
@@ -77,6 +96,8 @@ allLegalMoves square@((x, y), (King, side)) board =
           in [(square, pos) | pos <- legalSquares]
         Black -> let legalSquares = filter (\pos -> not (isBlack (lookup pos board))) (surroundingWithoutStart)
           in [(square, pos) | pos <- legalSquares]
+
+
 -- PAWN
 -- TODO: Ask Fogarty for reason why pattern matching didn't work and needed to be moved down
 -- TODO: delete bound check for Pawn, bc if a y is at the edge: turn into queen
@@ -97,13 +118,20 @@ allLegalMoves square@((x, y), (Pawn, Black)) board =
 -- TODO: lookup takes in a coordinate and outputs a piece tuple,
 -- need to define a function to do the reverse, so that we can find the input position values to generate movess
 
-isNothing :: Maybe a -> Bool
-isNothing Nothing = True
-isNothing (Just _) = False
+color :: Maybe Piece -> Maybe Side
+color piece = fmap snd piece
 
-isSomething :: Maybe a -> Bool
-isSomething (Just _) = True
-isSomething Nothing = False
+offset :: Pos -> Pos -> Pos
+offset (x,y) (ix, iy) = (x+ix,y+iy)
+
+opponent :: Side -> Side
+opponent White = Black
+opponent Black = White
+
+
+
+
+
 
 isWhite :: Maybe Piece -> Bool
 isWhite (Just (_, White)) = True
@@ -118,7 +146,7 @@ isBlack _ = False
 
 -- look for king, if still have both king --> return Nothing, otherwise return winning side
 win :: Board -> Maybe Side
-win board = 
+win board =
   let   tmp = filter (\((_,_),(pType, _)) -> pType == King) board in
         if length tmp /= 2 then Just (snd (snd (head tmp))) else Nothing
 
