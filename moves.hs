@@ -28,32 +28,27 @@ recurCheckPath board side (currentX, currentY) (ix, iy) --ix, iy are offsets -> 
 allLegalMoves :: Square -> Board -> [Move]
 -- BISHOP
 allLegalMoves square@((x, y), (Bishop, side)) board =
-  let upLeft = recurCheckPath board side (x,y) (-1, 1)
-      upRight = recurCheckPath board side (x,y) (1, 1)
-      downLeft = recurCheckPath board side (x,y) (-1, -1)
-      downRight = recurCheckPath board side (x,y) (1, -1)
-      allPos = upLeft ++ upRight ++ downLeft ++ downRight
-   in [(square, pos) | pos <- allPos]
+  let offsetbishop = [(-1, 1), (1, 1), (-1, -1), (1, -1)]
+      allpos = concat [recurCheckPath board side (x, y) offset | offset <- offsetbishop]
+  in [(square, pos) | pos <- allpos]
+
+  
+  -- let upLeft = recurCheckPath board side (x,y) (-1, 1)
+  --     upRight = recurCheckPath board side (x,y) (1, 1)
+  --     downLeft = recurCheckPath board side (x,y) (-1, -1)
+  --     downRight = recurCheckPath board side (x,y) (1, -1)
+  --     allPos = upLeft ++ upRight ++ downLeft ++ downRight
+  --  in [(square, pos) | pos <- allPos]
 -- ROOK
 allLegalMoves square@((x, y), (Rook, side)) board =
-  let left = recurCheckPath board side (x,y) (-1, 0)
-      right = recurCheckPath board side (x,y) (1, 0)
-      up = recurCheckPath board side (x,y) (0, 1)
-      down = recurCheckPath board side (x,y) (0, -1)
-      allPos = left ++ right ++ up ++ down
-   in [(square, pos) | pos <- allPos]
+  let offsetrook = [(-1, 0), (0, 1), (0, -1), (1, 0)]
+      allpos = concat [recurCheckPath board side (x, y) offset | offset <- offsetrook]
+  in [(square, pos) | pos <- allpos]
 -- QUEEN
 allLegalMoves square@((x, y), (Queen, side)) board =
-  let left = recurCheckPath board side (x,y) (-1, 0)
-      right = recurCheckPath board side (x,y) (1, 0)
-      up = recurCheckPath board side (x,y) (0, 1)
-      down = recurCheckPath board side (x,y) (0, -1)
-      upLeft = recurCheckPath board side (x,y) (-1, 1)
-      upRight = recurCheckPath board side (x,y) (1, 1)
-      downLeft = recurCheckPath board side (x,y) (-1, -1)
-      downRight = recurCheckPath board side (x,y) (1, -1)
-      allPos = left ++ right ++ up ++ down ++ upLeft ++ upRight ++ downLeft ++ downRight
-   in [(square, pos) | pos <- allPos]
+  let offsetqueen = [(-1, 0), (0, 1), (0, -1), (1, 0),(-1, 1), (1, 1), (-1, -1), (1, -1)]
+      allpos = concat [recurCheckPath board side (x, y) offset | offset <- offsetqueen]
+  in [(square, pos) | pos <- allpos]
 -- KNIGHT
 allLegalMoves square@((x, y), (Knight, side)) board =
   let twoMove = [-2, 2]
