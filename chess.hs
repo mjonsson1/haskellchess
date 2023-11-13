@@ -2,9 +2,9 @@ module Chess where
     
 import Data.Char
 import Data.List
+import Data.List.Split (splitOn)
 import Text.XHtml (rows)
-
-import Data.List
+import Data.Maybe
 
 data PieceType = Pawn | King | Bishop | Knight | Queen | Rook deriving (Show, Eq)
 data Side = Black | White deriving (Show, Eq)
@@ -82,11 +82,12 @@ showPiece (Pawn, White) = " ♟ "
 
 -- Returns a string representing specified row on the board
 showRow :: Int -> Side -> Board -> String
-showRow y White board = concat $ [show y, "  "] ++ intersperse "|" [getPiece (x,y) board | x <- [1..8]]
-showRow y Black board = concat $ [show y, "  "] ++ intersperse "|" [getPiece (x,y) board | x <- [8, 7..1]]
+showRow y White board = concat $ [show y, "  "] ++ intersperse "|" [lookupPiece (x,y) board | x <- [1..8]]
+showRow y Black board = concat $ [show y, "  "] ++ intersperse "|" [lookupPiece (x,y) board | x <- [8, 7..1]]
+
 -- Returns a string of the piece symbol at the given location on the board
-getPiece :: Pos -> Board -> String
-getPiece pos board = case lookup pos board of
+lookupPiece :: Pos -> Board -> String
+lookupPiece pos board = case lookup pos board of
                         Just piece -> showPiece piece
                         Nothing -> "   "
 
@@ -112,10 +113,46 @@ showBoardWhite board =
         coordinateLine = concat $ intersperse "   " ["", "a", "b", "c", "d", "e", "f", "g", "h"]
     in unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
 
+pieceFromLetter :: String -> Maybe Piece
+pieceFromLetter s = 
+    case s of 
+        "_" -> Nothing
+        "r" -> Just (Rook, Black)
+        "n" -> Just (Knight, Black)
+        "b" -> Just (Bishop, Black)
+        "q" -> Just (Queen, Black)
+        "k" -> Just (King, Black)
+        "p" -> Just (Pawn, Black)
+        "R" -> Just (Rook, White)
+        "N" -> Just (Knight, White)
+        "B" -> Just (Bishop, White)
+        "Q" -> Just (Queen, White)
+        "K" -> Just (King, White)
+        "P" -> Just (Pawn, White)
 
-fenToBoard :: String -> Board
-fenToBoard = undefined
+buildSquare :: ((Int, Int), Maybe Piece) -> Maybe Square
+buildSquare ((rowNum, colNum), piece) = case piece of 
+    Nothing -> Nothing
+    Just p -> Just ((rowNum, colNum), p)
 
+rowToBoard :: String -> Int -> [Square]
+rowToBoard rowString rowNum = 
+    let pieces = splitOn " " rowString
+    in catMaybes [buildSquare ((rowNum, colNum), pieceFromLetter piece) | (colNum, piece) <- zip [1..] pieces]
 
-boardToFen :: Board -> String
-boardToFen = undefined
+-- parses our simple board notation and converts to a Board
+stringToBoard :: String -> Board
+stringToBoard boardString = 
+    let rows = splitOn "\n" boardString
+    in concat [rowToBoard row rowNum | (rowNum, row) <- zip [1..] rows]
+
+{-
+r n b q k b n r
+p p p p p p p p
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+_ _ _ _ _ _ _ _
+P P P P P P P P
+R N B Q K B N R
+-}
