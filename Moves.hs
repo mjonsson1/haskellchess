@@ -22,32 +22,19 @@ recurCheckPath board side point dir --ix, iy are offsets -> a num in [-1..1]
 allLegalMoves :: Square -> Board -> [Move]
 -- BISHOP
 allLegalMoves square@((x, y), (Bishop, side)) board =
-  let upLeft = recurCheckPath board side (x,y) (-1, 1)
-      upRight = recurCheckPath board side (x,y) (1, 1)
-      downLeft = recurCheckPath board side (x,y) (-1, -1)
-      downRight = recurCheckPath board side (x,y) (1, -1)
-      allPos = upLeft ++ upRight ++ downLeft ++ downRight
-   in [(square, pos) | pos <- allPos]
+  let bishopDir = [(-1, 1), (1, 1), (-1, -1), (1, -1)]
+      allpos = concat [recurCheckPath board side (x, y) dir | dir <- bishopDir]
+  in [(square, pos) | pos <- allpos]
 -- ROOK
 allLegalMoves square@((x, y), (Rook, side)) board =
-  let left = recurCheckPath board side (x,y) (-1, 0)
-      right = recurCheckPath board side (x,y) (1, 0)
-      up = recurCheckPath board side (x,y) (0, 1)
-      down = recurCheckPath board side (x,y) (0, -1)
-      allPos = left ++ right ++ up ++ down
-   in [(square, pos) | pos <- allPos]
+  let rookDir = [(-1, 0), (0, 1), (0, -1), (1, 0)]
+      allpos = concat [recurCheckPath board side (x, y) dir | dir <- rookDir]
+  in [(square, pos) | pos <- allpos]
 -- QUEEN
 allLegalMoves square@((x, y), (Queen, side)) board =
-  let left = recurCheckPath board side (x,y) (-1, 0)
-      right = recurCheckPath board side (x,y) (1, 0)
-      up = recurCheckPath board side (x,y) (0, 1)
-      down = recurCheckPath board side (x,y) (0, -1)
-      upLeft = recurCheckPath board side (x,y) (-1, 1)
-      upRight = recurCheckPath board side (x,y) (1, 1)
-      downLeft = recurCheckPath board side (x,y) (-1, -1)
-      downRight = recurCheckPath board side (x,y) (1, -1)
-      allPos = left ++ right ++ up ++ down ++ upLeft ++ upRight ++ downLeft ++ downRight
-   in [(square, pos) | pos <- allPos]
+  let queenDir = [(-1, 0), (0, 1), (0, -1), (1, 0),(-1, 1), (1, 1), (-1, -1), (1, -1)]
+      allpos = concat [recurCheckPath board side (x, y) dir | dir <- queenDir]
+  in [(square, pos) | pos <- allpos]
 -- KNIGHT
 
 allLegalMoves square@((x, y), (Knight, side)) board =
@@ -62,29 +49,6 @@ allLegalMoves square@((x, y), (Knight, side)) board =
         Black -> let legalSquares = filter (\pos -> not (isBlack (lookup pos board))) (vertical ++ horizontal)
           in [(square, pos) | pos <- legalSquares]
 
---I rewrote this function for knight, but it does not operate as expected. FIX -Marco
-{-
-allLegalMoves square@((x, y), (Knight, side)) board =
-  let twoMove = [-2, 2]
-      oneMove = [-1, 1]
-      vertical :: [Pos]
-      vertical = [ (x + i, y + j) | i <- oneMove, inBound (x + i), j <- twoMove, inBound (y + j)]
-      horizontal = [ (x + j, y + i) | i <- oneMove, inBound (x + i), j <- twoMove, inBound (y + j)]
-      legalSquares = filter (\pos -> Just side == color (lookup pos board)) (vertical ++ horizontal)
-      in [(square, pos) | pos <- legalSquares]
--}
-
--- KING
--- Also rewrote this one and it doesn't work as expected
-{-
-allLegalMoves square@((x, y), (King, side)) board =
-  let oneMove = [-1, 0, 1]
-      surrounding :: [Pos]
-      surrounding = [ (x + i, y + j) | i <- oneMove, inBound (x + i), j <- oneMove, inBound (y + j)]
-      surroundingWithoutStart = delete (x,y) surrounding
-      legalSquares = filter (\pos -> Just side == color (lookup pos board)) (surroundingWithoutStart)
-        in [(square, pos) | pos <- legalSquares]
--}
 
 allLegalMoves square@((x, y), (King, side)) board =
   let oneMove = [-1, 0, 1]
@@ -127,10 +91,6 @@ offset (x,y) (ix, iy) = (x+ix,y+iy)
 opponent :: Side -> Side
 opponent White = Black
 opponent Black = White
-
-
-
-
 
 
 isWhite :: Maybe Piece -> Bool
