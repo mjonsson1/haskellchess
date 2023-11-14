@@ -28,8 +28,8 @@ recurCheckPath board side (currentX, currentY) (ix, iy) --ix, iy are offsets -> 
 allLegalMoves :: Square -> Board -> [Move]
 -- BISHOP
 allLegalMoves square@((x, y), (Bishop, side)) board =
-  let offsetbishop = [(-1, 1), (1, 1), (-1, -1), (1, -1)]
-      allpos = concat [recurCheckPath board side (x, y) offset | offset <- offsetbishop]
+  let bishopDirections = [(-1, 1), (1, 1), (-1, -1), (1, -1)]
+      allpos = concat [recurCheckPath board side (x, y) dir | dir <- bishopDirections]
   in [(square, pos) | pos <- allpos]
 
   
@@ -41,13 +41,13 @@ allLegalMoves square@((x, y), (Bishop, side)) board =
   --  in [(square, pos) | pos <- allPos]
 -- ROOK
 allLegalMoves square@((x, y), (Rook, side)) board =
-  let offsetrook = [(-1, 0), (0, 1), (0, -1), (1, 0)]
-      allpos = concat [recurCheckPath board side (x, y) offset | offset <- offsetrook]
+  let rookDirections = [(-1, 0), (0, 1), (0, -1), (1, 0)]
+      allpos = concat [recurCheckPath board side (x, y) dir | dir <- rookDirections]
   in [(square, pos) | pos <- allpos]
 -- QUEEN
 allLegalMoves square@((x, y), (Queen, side)) board =
-  let offsetqueen = [(-1, 0), (0, 1), (0, -1), (1, 0),(-1, 1), (1, 1), (-1, -1), (1, -1)]
-      allpos = concat [recurCheckPath board side (x, y) offset | offset <- offsetqueen]
+  let queenDirections = [(-1, 0), (0, 1), (0, -1), (1, 0),(-1, 1), (1, 1), (-1, -1), (1, -1)]
+      allpos = concat [recurCheckPath board side (x, y) dir | dir <- queenDirections]
   in [(square, pos) | pos <- allpos]
 -- KNIGHT
 allLegalMoves square@((x, y), (Knight, side)) board =
