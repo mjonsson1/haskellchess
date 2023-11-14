@@ -94,7 +94,7 @@ lookupPiece pos board = case lookup pos board of
 showBoard :: Board -> Side -> String
 -- showBoard board Black = showBoardBlack board
 -- showBoard board White = showBoardWhite board
-showBoard = showBoardWhite
+showBoard board _ = showBoardWhite board
 
 -- -- Converts a board to a string from black's perspective (black is on the bottom).
 -- showBoardBlack :: Board -> String
