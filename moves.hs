@@ -1,41 +1,117 @@
 module Moves where 
 
 import Chess
+import Data.Maybe
 
---                                            GENERATING MOVES
+--                                                 HELPER FUNCTIONS
+inBound :: Int -> Bool
+inBound x = x >= 1 && x <= 8
 
---TODO: pawn is taking into account legal moves too, maybe change this
 
-generatePawnMoves :: (Pos,Piece) -> Board -> [Pos]
-generatePawnMoves ((x,y), (Pawn, side)) board = 
-    let pushOnce = case side of
-            White -> [(x, y+1)| y+1 <= 8, isNothing (lookup (x,y+1) board)]
-            Black -> [(x, y - 1) | y - 1 >= 1, isNothing (lookup (x, y - 1) board)]
-        pushTwice = case side of
-            White -> [(x,y+2)| y+2 <= 8, isNothing (lookup (x,y+2) board), isNothing (lookup (x,y+1) board), y==2]
-            Black -> [(x,y-2) | y-2 >= 1, isNothing (lookup(x,y-2) board), isNothing (lookup (x,y-1) board), y==7]
-        captures = case side of
-            White ->  [(x+dx,y+1) | dx <- [-1,1], x+dx >= 1, x+dx <= 8, isBlack (lookup (x+dx,y+1) board)]
-            Black -> [(x+dx,y-1)| dx <- [-1,1], x+dx >= 1, x+dx <= 8, isWhite (lookup (x+dx,y-1) board)]
-    in pushOnce ++ pushTwice ++ captures
 
-generateBishopMoves :: (Pos,Piece) -> [Pos]
-generateBishopMoves ((x,y), (Bishop, side))  = 
-        let downLeftDiagonalMoves = [(x-i,y-i)|i <- [1..8], x-i <= 8, x-i>= 1, y-i<= 8, y-i >= 1]
-            downRightDiagonalMoves = [(x+i,y-i)|i <- [1..8], x+i <= 8, x+i>= 1, y-i<= 8, y-i >= 1]
-            upLeftDiagonalMoves = [(x-i,y+i)|i <- [1..8], x-i <= 8, x-i>= 1, y+i<= 8, y+i >= 1]
-            upRightDiagonalMoves = [(x+i,y+i)|i <- [1..8], x+i <= 8, x+i>= 1, y+i<= 8, y+i >= 1]
-            in downLeftDiagonalMoves ++ downRightDiagonalMoves ++ upLeftDiagonalMoves ++ upRightDiagonalMoves
+recurCheckPath :: Board -> Side -> Pos -> (Int, Int) -> [Pos]
+recurCheckPath board side point dir --ix, iy are offsets -> a num in [-1..1]
+  | not  $ inBound  (fst newPoint)  && inBound  (snd newPoint)  = []
+  | otherwise =
+      case lookup newPoint board of
+        Nothing -> newPoint : recurCheckPath board side (newPoint) dir
+        Just (piece, color) -> ([newPoint | color == opponent side])
+  where newPoint = offset point dir
 
-generateRookMoves :: (Pos,Piece) -> [Pos]
-generateRookMoves ((x,y), (Rook, side)) = 
-        let rookRange = [(-8)..(-1)] ++ [1..8]
-            verticalMoves = [(x,y+i) | i<- rookRange, y+i <= 8, y+i>= 1]
-            horizontalMoves = [(x+i,y)|i<- rookRange, x+i <= 8, x+i >= 1]
-        in (verticalMoves ++ horizontalMoves)
+--                                            GENERATING ALL LEGAL MOVES
+allLegalMoves :: Square -> Board -> [Move]
+-- BISHOP
+allLegalMoves square@((x, y), (Bishop, side)) board =
+  let bishopDirections = [(-1, 1), (1, 1), (-1, -1), (1, -1)]
+      allpos = concat [recurCheckPath board side (x, y) dir | dir <- bishopDirections]
+  in [(square, pos) | pos <- allpos]
 
---TODO: lookup takes in a coordinate and outputs a piece tuple, 
---need to define a function to do the reverse, so that we can find the input position values to generate movess
+  
+  -- let upLeft = recurCheckPath board side (x,y) (-1, 1)
+  --     upRight = recurCheckPath board side (x,y) (1, 1)
+  --     downLeft = recurCheckPath board side (x,y) (-1, -1)
+  --     downRight = recurCheckPath board side (x,y) (1, -1)
+  --     allPos = upLeft ++ upRight ++ downLeft ++ downRight
+  --  in [(square, pos) | pos <- allPos]
+-- ROOK
+allLegalMoves square@((x, y), (Rook, side)) board =
+  let rookDirections = [(-1, 0), (0, 1), (0, -1), (1, 0)]
+      allpos = concat [recurCheckPath board side (x, y) dir | dir <- rookDirections]
+  in [(square, pos) | pos <- allpos]
+-- QUEEN
+allLegalMoves square@((x, y), (Queen, side)) board =
+  let queenDirections = [(-1, 0), (0, 1), (0, -1), (1, 0),(-1, 1), (1, 1), (-1, -1), (1, -1)]
+      allpos = concat [recurCheckPath board side (x, y) dir | dir <- queenDirections]
+  in [(square, pos) | pos <- allpos]
+-- KNIGHT
+
+allLegalMoves square@((x, y), (Knight, side)) board =
+  let twoMove = [-2, 2]
+      oneMove = [-1, 1]
+      vertical :: [Pos]
+      vertical = [ (x + i, y + j) | i <- oneMove, inBound (x + i), j <- twoMove, inBound (y + j)]
+      horizontal = [ (x + j, y + i) | i <- oneMove, inBound (x + i), j <- twoMove, inBound (y + j)]
+  in case side of
+        White -> let legalSquares = filter (\pos -> not (isWhite (lookup pos board))) (vertical ++ horizontal)
+          in [(square, pos) | pos <- legalSquares]
+        Black -> let legalSquares = filter (\pos -> not (isBlack (lookup pos board))) (vertical ++ horizontal)
+          in [(square, pos) | pos <- legalSquares]
+
+--I rewrote this function for knight, but it does not operate as expected. FIX -Marco
+{-
+allLegalMoves square@((x, y), (Knight, side)) board =
+  let twoMove = [-2, 2]
+      oneMove = [-1, 1]
+      vertical :: [Pos]
+      vertical = [ (x + i, y + j) | i <- oneMove, inBound (x + i), j <- twoMove, inBound (y + j)]
+      horizontal = [ (x + j, y + i) | i <- oneMove, inBound (x + i), j <- twoMove, inBound (y + j)]
+      legalSquares = filter (\pos -> Just side == color (lookup pos board)) (vertical ++ horizontal)
+      in [(square, pos) | pos <- legalSquares]
+-}
+
+-- KING
+-- Also rewrote this one and it doesn't work as expected
+{-
+allLegalMoves square@((x, y), (King, side)) board =
+  let oneMove = [-1, 0, 1]
+      surrounding :: [Pos]
+      surrounding = [ (x + i, y + j) | i <- oneMove, inBound (x + i), j <- oneMove, inBound (y + j)]
+      surroundingWithoutStart = delete (x,y) surrounding
+      legalSquares = filter (\pos -> Just side == color (lookup pos board)) (surroundingWithoutStart)
+        in [(square, pos) | pos <- legalSquares]
+-}
+
+allLegalMoves square@((x, y), (King, side)) board =
+  let oneMove = [-1, 0, 1]
+      surrounding :: [Pos]
+      surrounding = [ (x + i, y + j) | i <- oneMove, inBound (x + i), j <- oneMove, inBound (y + j)]
+      surroundingWithoutStart = delete (x,y) surrounding
+  in case side of
+        White -> let legalSquares = filter (\pos -> not (isWhite (lookup pos board))) (surroundingWithoutStart)
+          in [(square, pos) | pos <- legalSquares]
+        Black -> let legalSquares = filter (\pos -> not (isBlack (lookup pos board))) (surroundingWithoutStart)
+          in [(square, pos) | pos <- legalSquares]
+
+
+-- PAWN
+-- TODO: Ask Fogarty for reason why pattern matching didn't work and needed to be moved down
+-- TODO: delete bound check for Pawn, bc if a y is at the edge: turn into queen
+allLegalMoves square@((x, y), (Pawn, White)) board =
+  let pushOnce = [(x, y + 1) | inBound (y + 1), isNothing (lookup (x, y + 1) board)]
+      pushTwice = [(x, y + 2) | y == 2, isNothing (lookup (x, y + 2) board), isNothing (lookup (x, y + 1) board)]
+      captures = [(x + dx, y + 1) | inBound (y + 1), dx <- [-1, 1], inBound (x + dx), isBlack (lookup (x + dx, y + 1) board)]
+      allPos = pushOnce ++ pushTwice ++ captures
+   in [(square, pos) | pos <- allPos]
+allLegalMoves square@((x, y), (Pawn, Black)) board =
+  let pushOnce = [(x, y - 1) | inBound (y - 1), isNothing (lookup (x, y - 1) board)]
+      pushTwice = [(x, y - 2) | y == 7, isNothing (lookup (x, y - 2) board), isNothing (lookup (x, y - 1) board)]
+      captures = [(x + dx, y - 1) | inBound (y - 1), dx <- [-1, 1], inBound (x + dx), isWhite (lookup (x + dx, y - 1) board)]
+      allPos = pushOnce ++ pushTwice ++ captures
+   in [(square, pos) | pos <- allPos]
+
+
+-- TODO: lookup takes in a coordinate and outputs a piece tuple,
+-- need to define a function to do the reverse, so that we can find the input position values to generate movess
 
 isNothing :: Maybe a -> Bool
 isNothing Nothing = True
