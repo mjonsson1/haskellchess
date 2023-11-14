@@ -94,16 +94,17 @@ lookupPiece pos board = case lookup pos board of
 -- Converts a board to a string when printed to output. 
 -- If not printed to output, newlines and pieces are not displayed properly. 
 showBoard :: Board -> Side -> String
-showBoard board Black = showBoardBlack board
-showBoard board White = showBoardWhite board
+-- showBoard board Black = showBoardBlack board
+-- showBoard board White = showBoardWhite board
+showBoard = showBoardWhite
 
--- Converts a board to a string from black's perspective (black is on the bottom).
-showBoardBlack :: Board -> String
-showBoardBlack board = 
-    let rows = [showRow y Black board | y <- [1..8]]
-        separator = "   " ++ replicate (31) '-'
-        coordinateLine = concat $ intersperse "   " ["", "h", "g", "f", "e", "d", "c", "b", "a"]
-    in unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
+-- -- Converts a board to a string from black's perspective (black is on the bottom).
+-- showBoardBlack :: Board -> String
+-- showBoardBlack board = 
+--     let rows = [showRow y Black board | y <- [1..8]]
+--         separator = "   " ++ replicate (31) '-'
+--         coordinateLine = concat $ intersperse "   " ["", "h", "g", "f", "e", "d", "c", "b", "a"]
+--     in unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
 
 -- Converts a board to a string from white's perspective (white is on the bottom).
 showBoardWhite :: Board -> String
