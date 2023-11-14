@@ -1,5 +1,5 @@
 module Chess where
-    
+
 import Data.Char
 import Data.List
 import Data.List.Split (splitOn)
@@ -7,62 +7,60 @@ import Text.XHtml (rows)
 import Data.Maybe
 
 data PieceType = Pawn | King | Bishop | Knight | Queen | Rook deriving (Show, Eq)
+
 data Side = Black | White deriving (Show, Eq)
 
-type Pos = (Int, Int) -- (x, y) 
+type Pos = (Int, Int) -- (x, y)
 
---to keep track of each piece
 type Piece = (PieceType, Side)
 
---to navigate the squares around a piece
 type Square = (Pos, Piece)
+
 type Board = [Square]
 
---maybe isCheck, isCheckMate
 type Move = (Square, Pos)
 
--- (currentBoard, currentSideTurn)
-type Game = (Board, Side)
+type Winner = Maybe Side
 
-initialBoard :: Board 
--- change to Board type 
-initialBoard = [((1, 1), (Rook, White)),
-                ((2, 1), (Knight, White)),
-                ((3, 1), (Bishop, White)),
-                ((4, 1), (Queen, White)),
-                ((5, 1), (King, White)),
-                ((6, 1), (Bishop, White)),
-                ((7, 1), (Knight, White)),
-                ((8, 1), (Rook, White)),
-                
-                ((1, 2), (Pawn, White)),
-                ((2, 2), (Pawn, White)),
-                ((3, 2), (Pawn, White)),
-                ((4, 2), (Pawn, White)),
-                ((5, 2), (Pawn, White)),
-                ((6, 2), (Pawn, White)),
-                ((7, 2), (Pawn, White)),
-                ((8, 2), (Pawn, White)),
-
-                ((1, 7), (Pawn, Black)),
-                ((2, 7), (Pawn, Black)),
-                ((3, 7), (Pawn, Black)),
-                ((4, 7), (Pawn, Black)),
-                ((5, 7), (Pawn, Black)),
-                ((6, 7), (Pawn, Black)),
-                ((7, 7), (Pawn, Black)),
-                ((8, 7), (Pawn, Black)),
-                
-                ((1, 8), (Rook, Black)),
-                ((2, 8), (Knight, Black)),
-                ((3, 8), (Bishop, Black)),
-                ((4, 8), (Queen, Black)),
-                ((5, 8), (King, Black)),
-                ((6, 8), (Bishop, Black)),
-                ((7, 8), (Knight, Black)),
-                ((8, 8), (Rook, Black))
-                ]
-
+initialBoard :: Board
+-- change to Board type
+initialBoard =
+  [ ((1, 1), (Rook, White)),
+    ((2, 1), (Knight, White)),
+    ((3, 1), (Bishop, White)),
+    ((4, 1), (Queen, White)),
+    ((5, 1), (King, White)),
+    ((6, 1), (Bishop, White)),
+    ((7, 1), (Knight, White)),
+    ((8, 1), (Rook, White)),
+    ((1, 2), (Pawn, White)),
+    ((2, 2), (Pawn, White)),
+    ((3, 2), (Pawn, White)),
+    ((4, 2), (Pawn, White)),
+    ((5, 2), (Pawn, White)),
+    ((6, 2), (Pawn, White)),
+    ((7, 2), (Pawn, White)),
+    ((8, 2), (Pawn, White)),
+    ((1, 7), (Pawn, Black)),
+    ((2, 7), (Pawn, Black)),
+    ((3, 7), (Pawn, Black)),
+    ((4, 7), (Pawn, Black)),
+    ((5, 7), (Pawn, Black)),
+    ((6, 7), (Pawn, Black)),
+    ((7, 7), (Pawn, Black)),
+    ((8, 7), (Pawn, Black)),
+    ((1, 8), (Rook, Black)),
+    ((2, 8), (Knight, Black)),
+    ((3, 8), (Bishop, Black)),
+    ((4, 8), (Queen, Black)),
+    ((5, 8), (King, Black)),
+    ((6, 8), (Bishop, Black)),
+    ((7, 8), (Knight, Black)),
+    ((8, 8), (Rook, Black))
+  ]
+  
+emptyBoard::Board
+emptyBoard = []
 --                                        SHOWING BOARD
 
 showPiece :: Piece -> String
@@ -91,8 +89,8 @@ lookupPiece pos board = case lookup pos board of
                         Just piece -> showPiece piece
                         Nothing -> "   "
 
--- Converts a board to a string when printed to output. 
--- If not printed to output, newlines and pieces are not displayed properly. 
+-- Converts a board to a string when printed to output.
+-- If not printed to output, newlines and pieces are not displayed properly.
 showBoard :: Board -> Side -> String
 -- showBoard board Black = showBoardBlack board
 -- showBoard board White = showBoardWhite board
@@ -108,11 +106,11 @@ showBoard = showBoardWhite
 
 -- Converts a board to a string from white's perspective (white is on the bottom).
 showBoardWhite :: Board -> String
-showBoardWhite board = 
-    let rows = [showRow y White board | y <- [8, 7..1]]
-        separator = "   " ++ replicate (31) '-'
-        coordinateLine = concat $ intersperse "   " ["", "a", "b", "c", "d", "e", "f", "g", "h"]
-    in unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
+showBoardWhite board =
+  let rows = [showRow y White board | y <- [8, 7 .. 1]]
+      separator = "   " ++ replicate (31) '-'
+      coordinateLine = concat $ intersperse "   " ["", "a", "b", "c", "d", "e", "f", "g", "h"]
+   in unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
 
 pieceFromLetter :: String -> Maybe Piece
 pieceFromLetter s = 
