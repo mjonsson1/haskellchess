@@ -1,6 +1,6 @@
 import Chess
 import Data.Char (toLower)
-import Moves
+import InputOutput
 
 toLowerString :: String -> String
 toLowerString = map toLower
