@@ -68,7 +68,7 @@ recurReadInput turn board = do
 -- print the current turn's board and recursively ask for input
 startTurn :: Side -> Board -> IO ()
 startTurn turn board = do
-  putStrLn $ showBoard board turn
+  putStrLn $ showBoard board
   if win board == Nothing then do
     putStrLn ("Enter move for " ++ (toLowerString (show turn)) ++ " (in format: d2 d4): ")
     recurReadInput turn board 
