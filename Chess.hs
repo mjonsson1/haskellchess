@@ -80,6 +80,7 @@ isAlly side maybePiece =
     Nothing -> False
     Just (_, pieceSide) -> pieceSide /= opponent side
 
+isOpponent :: Side -> Maybe Piece -> Bool
 isOpponent side maybePiece =
   case maybePiece of
     Nothing -> False
