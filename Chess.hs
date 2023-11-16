@@ -12,6 +12,8 @@ data PieceType = Pawn | King | Bishop | Knight | Queen | Rook deriving (Show, Eq
 
 data Side = Black | White deriving (Show, Eq)
 
+data Winner = WinningSide Side | Tie deriving (Show, Eq)
+
 type Pos = (Int, Int) -- (x, y)
 
 type Piece = (PieceType, Side)
@@ -21,8 +23,6 @@ type Square = (Pos, Piece)
 type Board = [Square]
 
 type Move = (Square, Pos)
-
-type Winner = Maybe Side
 
 type Game = (Board, Side, Int)
 
@@ -52,6 +52,8 @@ initialBoard =
 
 emptyBoard :: Board
 emptyBoard = []
+
+ongoingGame = (initialBoard, White, 50)
 
 --                                                 HELPER FUNCTIONS
 inBound :: (Int, Int) -> Bool
