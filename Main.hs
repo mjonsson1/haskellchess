@@ -21,9 +21,9 @@ readPos ([letter1, num1], [letter2, num2]) =
         y2 <- lookup num2 numStrToNum
         return ((x1, y1), (x2, y2))
 readPos _ = Nothing
-
-readMove :: String -> Board -> Maybe Move
-readMove line board =
+--EDIT BEGINS HERE
+readMove :: String -> Game -> Maybe Move
+readMove line (board,side,turn) =
   let split :: [String]
       split = filter (not . null) (words line)
    in -- check if input is two strings
@@ -41,41 +41,41 @@ readMove line board =
         -- if the input format is not two strings
         _ -> Nothing
 
-recurReadInput :: Side -> Board -> IO ()
-recurReadInput turn board = do
+recurReadInput :: Game -> IO ()
+recurReadInput (board, sideOfPlayer, turnNum) = do
   moveStr <- getLine
-  case readMove moveStr board of
+  case readMove moveStr (board,sideOfPlayer, turnNum) of
     Nothing -> do
       putStrLn "Invalid input. Please enter a valid input (in format: d2 d4): "
-      recurReadInput turn board
+      recurReadInput (board, sideOfPlayer, turnNum)
     Just move@(((x, y), (pType, side)), (x1, y1)) ->
-      if side /= turn
+      if side /= sideOfPlayer
         then do
           putStrLn "Can not move opponent piece, try again: "
-          recurReadInput turn board
+          recurReadInput (board, sideOfPlayer, turnNum)
         else do
           case makeMove board move of
             Just newBoard ->
-              if turn == White
-                then startTurn Black newBoard
-                else startTurn White newBoard
+              if sideOfPlayer == White
+                then startTurn (newBoard, Black, turnNum + 1)
+                else startTurn (newBoard, White, turnNum + 1)
             Nothing -> do
               putStrLn "This is not a valid move, try again: "
-              recurReadInput turn board
+              recurReadInput (board, sideOfPlayer, turnNum)
 
 -- this is the piece that is being moved
 
 -- print the current turn's board and recursively ask for input
-startTurn :: Side -> Board -> IO ()
-startTurn turn board = do
+startTurn :: Game -> IO ()
+startTurn (board, sideOfPlayer, turnNum) = do
   putStrLn $ showBoard board
   if win board == Nothing then do
-    putStrLn ("Enter move for " ++ (toLowerString (show turn)) ++ " (in format: d2 d4): ")
-    recurReadInput turn board 
+    putStrLn ("Turn number: "++ (show turnNum)++". Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
+    recurReadInput (board, sideOfPlayer, turnNum)
   else do 
     putStrLn(show (win board) ++ " is the winner!")
 
 main :: IO ()
 main = do
-  startTurn White initialBoard
+  startTurn (initialBoard, White, 1)
 
