@@ -1,6 +1,7 @@
 import Chess
 import Data.Char (toLower)
 import InputOutput
+import Solver
 
 toLowerString :: String -> String
 toLowerString = map toLower
@@ -21,9 +22,10 @@ readPos ([letter1, num1], [letter2, num2]) =
         y2 <- lookup num2 numStrToNum
         return ((x1, y1), (x2, y2))
 readPos _ = Nothing
---EDIT BEGINS HERE
+
+-- EDIT BEGINS HERE
 readMove :: String -> Game -> Maybe Move
-readMove line (board,side,turn) =
+readMove line (board, side, turn) =
   let split :: [String]
       split = filter (not . null) (words line)
    in -- check if input is two strings
@@ -44,7 +46,7 @@ readMove line (board,side,turn) =
 recurReadInput :: Game -> IO ()
 recurReadInput (board, sideOfPlayer, turnNum) = do
   moveStr <- getLine
-  case readMove moveStr (board,sideOfPlayer, turnNum) of
+  case readMove moveStr (board, sideOfPlayer, turnNum) of
     Nothing -> do
       putStrLn "Invalid input. Please enter a valid input (in format: d2 d4): "
       recurReadInput (board, sideOfPlayer, turnNum)
@@ -69,13 +71,25 @@ recurReadInput (board, sideOfPlayer, turnNum) = do
 startTurn :: Game -> IO ()
 startTurn (board, sideOfPlayer, turnNum) = do
   putStrLn $ showBoard board
-  if win board == Nothing then do
-    putStrLn ("Turn number: "++ (show turnNum)++". Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
-    recurReadInput (board, sideOfPlayer, turnNum)
-  else do 
-    putStrLn(show (win board) ++ " is the winner!")
+  if win board == Nothing
+    then do
+      putStrLn ("Turn number: " ++ (show turnNum) ++ ". Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
+      recurReadInput (board, sideOfPlayer, turnNum)
+    else do
+      putStrLn (show (win board) ++ " is the winner!")
 
 main :: IO ()
 main = do
   startTurn (initialBoard, White, 1)
 
+-- printAllBoard :: [Board] -> IO ()
+-- printAllBoard [b] = do putStrLn $ showBoard b
+-- printAllBoard (b : bs) = do
+--   putStrLn $ showBoard b
+--   printAllBoard bs
+
+-- main :: IO ()
+-- main = do
+--   let newGames = allNextGame (initialBoard, White, 50)
+--   let allBoards = [board | (board, _, _) <- newGames]
+--   printAllBoard allBoards
