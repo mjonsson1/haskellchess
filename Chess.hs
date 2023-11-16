@@ -53,8 +53,6 @@ initialBoard =
 emptyBoard :: Board
 emptyBoard = []
 
-ongoingGame = (initialBoard, White, 50)
-
 --                                                 HELPER FUNCTIONS
 inBound :: (Int, Int) -> Bool
 inBound (x, y) = (x >= 1 && x <= 8) && (y >= 1 && y <= 8)
