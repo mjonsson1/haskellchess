@@ -2,18 +2,14 @@ module Solver where
 
 import Chess
 import Debug.Trace
-import Distribution.Fields.Field (getName)
 
-generateAllNextGame :: Game -> [Game]
-generateAllNextGame (board, side, turn) =
-  let allAllySquares :: [Square]
-      allAllySquares = filter (\(_, (_, pSide)) -> pSide == side) board
-      allAllyLegalMoves :: [Move]
-      allAllyLegalMoves = concat [allLegalMoves sq board | sq <- allAllySquares]
-      allNextBoard = [makeUnSafeMove board move | move <- allAllyLegalMoves]
-   in [(newBoard, opponent side, turn - 1) | newBoard <- allNextBoard]
+allNextGame :: Game -> [Game]
+allNextGame game@(board, side, turn) =
+  let allMoves = allLegalMoves game
+  in [makeUnSafeMove game move | move <- allMoves]
 
--- already takes into account whether turn hit 0 or not
+-- if game is ongoing (2 kings, turn != 0), return Nothing
+-- else return just Tie or just WinningSide side
 whoHasWon :: Game -> Maybe Winner
 whoHasWon (board, side, turn)
   | length kingList == 2 && turn /= 0 = Nothing
@@ -29,14 +25,34 @@ whoWillWin game@(_, side, _) =
     -- winning State can be a tie or a WinningSide side
     Just winningState -> winningState
     Nothing ->
-      let allNextGame = generateAllNextGame game
-          nextGameWinners :: [Winner]
-          nextGameWinners = [whoWillWin nextGame | nextGame <- allNextGame]
-       in case nextGameWinners of
-            winners
-              | all (== WinningSide (opponent side)) winners -> WinningSide (opponent side)
-              | (WinningSide side) `elem` winners -> WinningSide side
-              | otherwise -> Tie
+      let nextGameWinners :: [Winner]
+          nextGameWinners = [whoWillWin nextGame | nextGame <- allNextGame game]
+          determineWinner :: [Winner] -> Winner
+          determineWinner winners
+            | all (== WinningSide (opponent side)) winners = WinningSide (opponent side)
+            | (WinningSide side) `elem` winners = WinningSide side
+            | otherwise = Tie
+       in determineWinner nextGameWinners
+
+gameMoveAssociation :: Game -> [(Game, Move)]
+gameMoveAssociation game@(board, side, turn) =
+  let allMoves = allLegalMoves game
+  in [(makeUnSafeMove game move, move) | move <- allMoves]
+
+bestMove :: Game -> Move
+bestMove game@(board, side, _) =
+  let outcomes :: [(Winner,  Move)]
+      outcomes = [(whoWillWin g, m) | tup@(g, m) <- gameMoveAssociation game]
+  in case lookup (WinningSide side) outcomes of 
+    Just move -> move
+    Nothing -> 
+      case lookup Tie outcomes of 
+        Nothing -> snd (head outcomes)
+        Just move -> move
+
 
 testBoard :: Board
 testBoard = [((8, 8), (King, White)), ((1, 1), (King, Black)), ((7, 2), (Rook, Black)), ((6, 1), (Rook, Black))]
+      
+
+--TODO: Breadth first find best move maybe, so you can check mate in 1 instead of 5
