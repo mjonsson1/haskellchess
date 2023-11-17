@@ -39,10 +39,10 @@ lookupPiece pos board = case lookup pos board of
 -- Converts a board to a string when printed to output.
 -- If not printed to output, newlines and pieces are not displayed properly.
 showBoard :: Board -> String
-showBoard board = 
+showBoard board =
     let rows = [showRow y White board | y <- [8, 7 .. 1]]
         separator = "   " ++ replicate (31) '-'
-        coordinateLine = concat $ intersperse "   " ["", "a", "b", "c", "d", "e", "f", "g", "h"]
+        coordinateLine = intercalate "   " ["", "a", "b", "c", "d", "e", "f", "g", "h"]
     in unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
 
 
@@ -50,8 +50,8 @@ showBoard board =
 --                                        STRING TO BOARD
 
 pieceFromLetter :: String -> Maybe Piece
-pieceFromLetter s = 
-    case s of 
+pieceFromLetter s =
+    case s of
         "_" -> Nothing
         "" -> Nothing
         "r" -> Just (Rook, Black)
@@ -68,19 +68,19 @@ pieceFromLetter s =
         "P" -> Just (Pawn, White)
 
 buildSquare :: ((Int, Int), Maybe Piece) -> Maybe Square
-buildSquare ((colNum, rowNum), piece) = 
-    case piece of 
+buildSquare ((colNum, rowNum), piece) =
+    case piece of
         Nothing -> Nothing
         Just p -> Just ((colNum, rowNum), p)
 
 rowToBoard :: String -> Int -> [Square]
-rowToBoard rowString rowNum = 
+rowToBoard rowString rowNum =
     let pieces = splitOn " " rowString
     in catMaybes [buildSquare ((colNum, rowNum), pieceFromLetter piece) | (colNum, piece) <- zip [1..] pieces]
 
 -- parses our simple board notation and converts to a Board
 stringToBoard :: String -> Board
-stringToBoard boardString = 
+stringToBoard boardString =
     let rows = splitOn " \n" boardString
     in concat [rowToBoard row rowNum | (rowNum, row) <- zip [8, 7..1] rows]
 
@@ -88,7 +88,7 @@ stringToBoard boardString =
 --                                        BOARD TO STRING
 
 pieceToString :: Maybe Piece -> String
-pieceToString piece = 
+pieceToString piece =
     case piece of
         Nothing -> "_ "
         Just (Rook, Black) -> "r "
