@@ -1,5 +1,4 @@
-Initial Board
-
+W 20
 r n b q k b n r 
 p p p p p p p p 
 _ _ _ _ _ _ _ _ 

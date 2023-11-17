@@ -7,6 +7,7 @@ import Data.List
 import Data.List.Split (splitOn)
 import Text.XHtml (rows)
 import Data.Maybe
+import System.IO
 
 --                                        SHOWING BOARD
 
@@ -108,3 +109,35 @@ rowToString board rowNum = (concat [pieceToString (lookup (colNum, rowNum) board
 
 boardToString :: Board -> String
 boardToString board = concat [rowToString (filter (\((column, row), piece) -> row == x) board) x | x <- [8, 7..1]]
+
+
+--                                        GAME TO STRING
+readGame :: String -> Game
+readGame gameString = 
+    let (headerRows:boardRows) = splitOn "\n" gameString
+        header = splitOn " " headerRows
+        side = case (head header) of 
+            "W" -> White
+            "B" -> Black
+        turnsLeft = read (last header)
+        board = stringToBoard (intercalate "\n" boardRows)
+    in (board, side, turnsLeft)
+
+showGame :: Game -> String
+showGame (board, side, turnsLeft) = 
+    let sideString = case side of
+            White -> "W"
+            Black -> "B"
+    in sideString ++ " " ++ (show turnsLeft) ++ "\n" ++ boardToString board
+
+-- writeGame :: Game -> FilePath -> IO ()
+-- writeGame game filepath = do
+--     let gameString = showGame game
+--     handle <- openFile filepath WriteMode
+--     hPutStr handle gameString
+--     hClose handle
+
+-- loadGame :: FilePath -> IO Game 
+-- loadGame filepath = do
+--     gameContent <- (readFile filepath)
+--     let game = readGame gameContent
