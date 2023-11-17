@@ -87,29 +87,29 @@ isOpponent side maybePiece =
     Just (_, pieceSide) -> pieceSide == opponent side
 
 --                                            GENERATING ALL LEGAL MOVES
-allLegalMoves :: Square -> Board -> [Move]
+pieceLegalMoves :: Square -> Board -> [Move]
 -- BISHOP
-allLegalMoves square@((x, y), (Bishop, side)) board =
+pieceLegalMoves square@((x, y), (Bishop, side)) board =
   let bishopDir = [(-1, 1), (1, 1), (-1, -1), (1, -1)]
       allpos = concat [recurCheckPath board side (x, y) dir | dir <- bishopDir]
    in [(square, pos) | pos <- allpos]
 -- ROOK
-allLegalMoves square@((x, y), (Rook, side)) board =
+pieceLegalMoves square@((x, y), (Rook, side)) board =
   let rookDir = [(-1, 0), (0, 1), (0, -1), (1, 0)]
       allpos = concat [recurCheckPath board side (x, y) dir | dir <- rookDir]
    in [(square, pos) | pos <- allpos]
 -- QUEEN
-allLegalMoves square@((x, y), (Queen, side)) board =
+pieceLegalMoves square@((x, y), (Queen, side)) board =
   let queenDir = [(-1, 0), (0, 1), (0, -1), (1, 0), (-1, 1), (1, 1), (-1, -1), (1, -1)]
       allpos = concat [recurCheckPath board side (x, y) dir | dir <- queenDir]
    in [(square, pos) | pos <- allpos]
 -- KNIGHT
-allLegalMoves square@((x, y), (Knight, side)) board =
+pieceLegalMoves square@((x, y), (Knight, side)) board =
   let allSquares = [(x + i, y + j) | i <- [-2 .. 2], j <- [-2 .. 2], abs (i * j) == 2, inBound (x + i, y + j)]
       legalSquares = filter (\pos -> not (isAlly side (lookup pos board))) allSquares
    in [(square, pos) | pos <- legalSquares]
 -- KING
-allLegalMoves square@((x, y), (King, side)) board =
+pieceLegalMoves square@((x, y), (King, side)) board =
   let oneMove = [-1, 0, 1]
       surrounding = [(x + i, y + j) | i <- oneMove, j <- oneMove, inBound (x + i, y + j)]
       surroundingWithoutStart = delete (x, y) surrounding
@@ -117,18 +117,24 @@ allLegalMoves square@((x, y), (King, side)) board =
    in [(square, pos) | pos <- legalSquares]
 -- PAWN
 -- TODO: delete bound check for Pawn, bc if a y is at the edge: turn into queen
-allLegalMoves square@((x, y), (Pawn, White)) board =
+pieceLegalMoves square@((x, y), (Pawn, White)) board =
   let pushOnce = [(x, y + 1) | inBound (x, y + 1), isNothing (lookup (x, y + 1) board)]
       pushTwice = [(x, y + 2) | y == 2, isNothing (lookup (x, y + 2) board), isNothing (lookup (x, y + 1) board)]
       captures = [(x + dx, y + 1) | dx <- [-1, 1], inBound (x + dx, y + 1), isOpponent White (lookup (x + dx, y + 1) board)]
       allPos = pushOnce ++ pushTwice ++ captures
    in [(square, pos) | pos <- allPos]
-allLegalMoves square@((x, y), (Pawn, Black)) board =
+pieceLegalMoves square@((x, y), (Pawn, Black)) board =
   let pushOnce = [(x, y - 1) | inBound (x, y - 1), isNothing (lookup (x, y - 1) board)]
       pushTwice = [(x, y - 2) | y == 7, isNothing (lookup (x, y - 2) board), isNothing (lookup (x, y - 1) board)]
       captures = [(x + dx, y - 1) | dx <- [-1, 1], inBound (x + dx, y - 1), isOpponent Black (lookup (x + dx, y - 1) board)]
       allPos = pushOnce ++ pushTwice ++ captures
    in [(square, pos) | pos <- allPos]
+
+allLegalMoves :: Game -> [Move]
+allLegalMoves (board, side, _) = 
+  let allAllySquares :: [Square]
+      allAllySquares = filter (\(_, (_, pSide)) -> pSide == side) board
+  in concat [pieceLegalMoves sq board | sq <- allAllySquares]
 
 -- look for king, if still have both king --> return Nothing, otherwise return winning side
 win :: Board -> Maybe Side
@@ -138,15 +144,16 @@ win board =
 
 -- NOTE: the fromSquare@ is Fogarty's suggestion, do not delete
 -- you take in a board and a move, then return a new board after the change
-makeMove :: Board -> Move -> Maybe Board
-makeMove board move@(fromSquare@(startPos, movingPiece), toPos)
-  | move `notElem` (allLegalMoves fromSquare board) = Nothing
+makeMove :: Game -> Move -> Maybe Game
+makeMove (board, side, turn) move@(fromSquare@(startPos, movingPiece), toPos)
+  | snd movingPiece /= side = Nothing
+  | move `notElem` (pieceLegalMoves fromSquare board) = Nothing
   | otherwise =
       let updatedBoard = [(pos, piece) | (pos, piece) <- board, pos /= startPos, pos /= toPos]
-       in Just ((toPos, movingPiece) : updatedBoard)
+       in Just ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)
 
 -- making a move without considering whether it is legal
-makeUnSafeMove :: Board -> Move -> Board
-makeUnSafeMove board move@(fromSquare@(startPos, movingPiece), toPos) =
+makeUnSafeMove :: Game -> Move -> Game
+makeUnSafeMove (board, side, turn) move@(fromSquare@(startPos, movingPiece), toPos) =
   let updatedBoard = [(pos, piece) | (pos, piece) <- board, pos /= startPos, pos /= toPos]
-   in (toPos, movingPiece) : updatedBoard
+    in ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)
