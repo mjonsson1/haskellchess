@@ -8,7 +8,8 @@ import Data.List.Split (splitOn)
 import Text.XHtml (rows)
 import Data.Maybe
 import System.IO
-
+import Control.Exception (bracket)
+import System.FilePath
 --                                        SHOWING BOARD
 
 showPiece :: Piece -> String
@@ -130,14 +131,34 @@ showGame (board, side, turnsLeft) =
             Black -> "B"
     in sideString ++ " " ++ (show turnsLeft) ++ "\n" ++ boardToString board
 
--- writeGame :: Game -> FilePath -> IO ()
--- writeGame game filepath = do
---     let gameString = showGame game
---     handle <- openFile filepath WriteMode
---     hPutStr handle gameString
---     hClose handle
 
--- loadGame :: FilePath -> IO Game 
--- loadGame filepath = do
---     gameContent <- (readFile filepath)
---     let game = readGame gameContent
+
+writeGame :: Game -> FilePath -> IO ()
+writeGame game filepath = bracket
+    (openFile filepath WriteMode)
+    (\handle -> hClose handle)
+    (\handle -> do
+        let gameString = showGame game
+        hPutStr handle gameString
+    )
+
+{-
+writeGame :: Game -> FilePath -> IO ()
+writeGame game filepath = do
+let gameString = showGame game
+    handle <- openFile filepath WriteMode
+    hPutStr handle gameString
+    hClose handle
+-}
+
+{- loadGame :: FilePath -> IO Game 
+loadGame filepath = do
+gameContent <- (readFile filepath)
+    let game = readGame gameContent
+-}
+
+loadGame :: FilePath -> IO Game 
+loadGame filepath = do
+    gameContent <- readFile filepath
+    let game = readGame gameContent
+    return game
