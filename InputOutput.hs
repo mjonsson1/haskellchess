@@ -145,3 +145,10 @@ loadGame filepath = do
     gameContent <- (readFile filepath)
     let game = readGame gameContent
     return game
+
+
+putBestMove :: Game -> IO ()
+putBestMove game = do
+    let bm = bestMove game
+        (board, side, turn) = makeUnSafeMove game bm
+    putStrLn $ showBoard board
