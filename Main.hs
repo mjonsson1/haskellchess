@@ -62,7 +62,7 @@ recurReadInput game = do
 startTurn :: Game -> IO ()
 startTurn (board, sideOfPlayer, turnNum) = do
   putStrLn $ showBoard board
-  if win board == Nothing
+  if win board == Nothing && turnNum >= 0
     then do
       putStrLn ("Turns remaining:  " ++ (show turnNum) ++ ". Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
       recurReadInput (board, sideOfPlayer, turnNum)
@@ -71,7 +71,7 @@ startTurn (board, sideOfPlayer, turnNum) = do
 
 main :: IO ()
 main = do
-  startTurn (initialBoard, White, 1)
+  startTurn (initialBoard, White, 30)
 
 
 
