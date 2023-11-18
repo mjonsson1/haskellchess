@@ -132,29 +132,16 @@ showGame (board, side, turnsLeft) =
             Black -> "B"
     in sideString ++ " " ++ (show turnsLeft) ++ "\n" ++ boardToString board
 
-
-
-{- 
 writeGame :: Game -> FilePath -> IO ()
 writeGame game filepath = do
-let gameString = showGame game
+    let gameString = showGame game
     handle <- openFile filepath WriteMode
     hPutStr handle gameString
     hClose handle
--}
+    return ()
 
-{- loadGame :: FilePath -> IO Game 
+loadGame :: FilePath -> IO Game 
 loadGame filepath = do
-gameContent <- (readFile filepath)
+    gameContent <- (readFile filepath)
     let game = readGame gameContent
--}
-
-putBestMove :: Game -> IO ()
-putBestMove game = do
-    let bm = bestMove game
-        (board, side, turn) = makeUnSafeMove game bm
-    putStrLn $ showBoard board
-
-
-mateInOne :: Board
-mateInOne = [((1,1),(King,Black)) , ((8,8),(King, White)), ((7,2),(Queen, Black)), ((7,1),(Rook, Black))] 
+    return game
