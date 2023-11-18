@@ -64,7 +64,7 @@ startTurn (board, sideOfPlayer, turnNum) = do
   putStrLn $ showBoard board
   if win board == Nothing
     then do
-      putStrLn ("Turn number: " ++ (show turnNum) ++ ". Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
+      putStrLn ("Turns remaining:  " ++ (show turnNum) ++ ". Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
       recurReadInput (board, sideOfPlayer, turnNum)
     else do
       putStrLn (show (win board) ++ " is the winner!")

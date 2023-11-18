@@ -10,6 +10,7 @@ import Data.Maybe
 import System.IO
 import Control.Exception (bracket)
 import System.FilePath
+import Solver
 --                                        SHOWING BOARD
 
 showPiece :: Piece -> String
@@ -133,16 +134,7 @@ showGame (board, side, turnsLeft) =
 
 
 
-writeGame :: Game -> FilePath -> IO ()
-writeGame game filepath = bracket
-    (openFile filepath WriteMode)
-    (\handle -> hClose handle)
-    (\handle -> do
-        let gameString = showGame game
-        hPutStr handle gameString
-    )
-
-{-
+{- 
 writeGame :: Game -> FilePath -> IO ()
 writeGame game filepath = do
 let gameString = showGame game
@@ -157,8 +149,12 @@ gameContent <- (readFile filepath)
     let game = readGame gameContent
 -}
 
-loadGame :: FilePath -> IO Game 
-loadGame filepath = do
-    gameContent <- readFile filepath
-    let game = readGame gameContent
-    return game
+putBestMove :: Game -> IO ()
+putBestMove game = do
+    let bm = bestMove game
+        (board, side, turn) = makeUnSafeMove game bm
+    putStrLn $ showBoard board
+
+
+mateInOne :: Board
+mateInOne = [((1,1),(King,Black)) , ((8,8),(King, White)), ((7,2),(Queen, Black)), ((7,1),(Rook, Black))] 

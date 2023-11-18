@@ -51,6 +51,7 @@ bestMove game@(board, side, _) =
         Just move -> move
 
 
+
 testBoard :: Board
 testBoard = [((8, 8), (King, White)), ((1, 1), (King, Black)), ((7, 2), (Rook, Black)), ((6, 1), (Rook, Black))]
       
