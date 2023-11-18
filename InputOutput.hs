@@ -130,14 +130,16 @@ showGame (board, side, turnsLeft) =
             Black -> "B"
     in sideString ++ " " ++ (show turnsLeft) ++ "\n" ++ boardToString board
 
--- writeGame :: Game -> FilePath -> IO ()
--- writeGame game filepath = do
---     let gameString = showGame game
---     handle <- openFile filepath WriteMode
---     hPutStr handle gameString
---     hClose handle
+writeGame :: Game -> FilePath -> IO ()
+writeGame game filepath = do
+    let gameString = showGame game
+    handle <- openFile filepath WriteMode
+    hPutStr handle gameString
+    hClose handle
+    return ()
 
--- loadGame :: FilePath -> IO Game 
--- loadGame filepath = do
---     gameContent <- (readFile filepath)
---     let game = readGame gameContent
+loadGame :: FilePath -> IO Game 
+loadGame filepath = do
+    gameContent <- (readFile filepath)
+    let game = readGame gameContent
+    return game
