@@ -1,6 +1,7 @@
 import Chess
 import Data.Char (toLower)
 import InputOutput
+
 -- import Solver
 
 toLowerString :: String -> String
@@ -51,12 +52,11 @@ recurReadInput game = do
       putStrLn "Invalid input. Please enter a valid input (in format: d2 d4): "
       recurReadInput game
     Just move@(((x, y), (pType, side)), (x1, y1)) ->
-        case makeMove game move of
-          Just newBoard -> startTurn newBoard
-          Nothing -> do
-            putStrLn "This is not a valid move, try again: "
-            recurReadInput game
-
+      case makeMove game move of
+        Just newBoard -> startTurn newBoard
+        Nothing -> do
+          putStrLn "This is not a valid move, try again: "
+          recurReadInput game
 
 -- print the current turn's board and recursively ask for input
 startTurn :: Game -> IO ()
@@ -69,11 +69,9 @@ startTurn (board, sideOfPlayer, turnNum) = do
     else do
       putStrLn (show (win board) ++ " is the winner!")
 
-main :: IO ()
-main = do
-  startTurn (initialBoard, White, 30)
-
-
+-- main :: IO ()
+-- main = do
+--   startTurn (initialBoard, White, 30)
 
 -- printAllBoard :: [Board] -> IO ()
 -- printAllBoard [b] = do putStrLn $ showBoard b
