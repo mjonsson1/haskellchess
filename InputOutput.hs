@@ -8,7 +8,8 @@ import Data.List.Split (splitOn)
 import Text.XHtml (rows)
 import Data.Maybe
 import System.IO
-
+import Control.Exception (bracket)
+import System.FilePath
 --                                        SHOWING BOARD
 
 showPiece :: Piece -> String
