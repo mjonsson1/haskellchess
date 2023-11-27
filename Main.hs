@@ -1,9 +1,25 @@
 import Chess
 import Data.Char (toLower)
 import InputOutput
+import Solver
 
--- import Solver
 
+import Chess
+import Control.Exception (bracket)
+import Data.Char
+import Data.List
+import Data.List.Split (splitOn)
+import Data.Maybe
+import Debug.Trace
+import Solver
+import System.Directory.Internal.Prelude (getArgs)
+import System.Environment
+import System.FilePath
+import System.IO
+import Text.Parsec (putState)
+import Text.XHtml (rows)
+
+{-
 toLowerString :: String -> String
 toLowerString = map toLower
 
@@ -84,3 +100,15 @@ startTurn (board, sideOfPlayer, turnNum) = do
 --   let newGames = allNextGame (initialBoard, White, 50)
 --   let allBoards = [board | (board, _, _) <- newGames]
 --   printAllBoard allBoards
+-}
+
+main :: IO ()
+main =
+  do
+    args <- getArgs
+    let fname = head args
+    game@(initialboard, _, _) <- loadGame fname
+    putStrLn "initial board: "
+    putStrLn $ showBoard initialboard
+    putStrLn "new board: "
+    putBestMove game
