@@ -8,16 +8,7 @@ allNextGame game@(board, side, turn) =
   let allMoves = allLegalMoves game
   in [makeUnSafeMove game move | move <- allMoves]
 
--- if game is ongoing (2 kings, turn != 0), return Nothing
--- else return just Tie or just WinningSide side
-whoHasWon :: Game -> Maybe Winner
-whoHasWon (board, side, turn)
-  | length kingList == 2 && turn /= 0 = Nothing
-  | length kingList == 1 = Just (WinningSide winningSide)
-  | otherwise = Just Tie
-  where
-    kingList = filter (\((_, _), (pType, _)) -> pType == King) board
-    ((_, _), (_, winningSide)) = head kingList
+
 
 whoWillWin :: Game -> Winner
 whoWillWin game@(_, side, _) =

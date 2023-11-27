@@ -137,23 +137,33 @@ allLegalMoves (board, side, _) =
   in concat [pieceLegalMoves sq board | sq <- allAllySquares]
 
 -- look for king, if still have both king --> return Nothing, otherwise return winning side
-win :: Board -> Maybe Side
-win board =
-  let tmp = filter (\((_, _), (pType, _)) -> pType == King) board
-   in if length tmp /= 2 then Just (snd (snd (head tmp))) else Nothing
+-- win :: Board -> Maybe Side
+-- win board =
+--   let tmp = filter (\((_, _), (pType, _)) -> pType == King) board
+--    in if length tmp /= 2 then Just (snd (snd (head tmp))) else Nothing
 
--- NOTE: the fromSquare@ is Fogarty's suggestion, do not delete
+-- if game is ongoing (2 kings, turn != 0), return Nothing
+-- else return just Tie or just WinningSide side
+whoHasWon :: Game -> Maybe Winner
+whoHasWon (board, side, turn)
+  | length kingList == 2 && turn /= 0 = Nothing
+  | length kingList == 1 = Just (WinningSide winningSide)
+  | otherwise = Just Tie
+  where
+    kingList = filter (\((_, _), (pType, _)) -> pType == King) board
+    ((_, _), (_, winningSide)) = head kingList
+
 -- you take in a board and a move, then return a new board after the change
 makeMove :: Game -> Move -> Maybe Game
-makeMove (board, side, turn) move@(fromSquare@(startPos, movingPiece), toPos)
+makeMove (board, side, turn) move@((startPos, movingPiece), toPos)
   | snd movingPiece /= side = Nothing
-  | move `notElem` (pieceLegalMoves fromSquare board) = Nothing
+  | move `notElem` (pieceLegalMoves (startPos, movingPiece) board) = Nothing
   | otherwise =
       let updatedBoard = [(pos, piece) | (pos, piece) <- board, pos /= startPos, pos /= toPos]
        in Just ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)
 
 -- making a move without considering whether it is legal
 makeUnSafeMove :: Game -> Move -> Game
-makeUnSafeMove (board, side, turn) move@(fromSquare@(startPos, movingPiece), toPos) =
+makeUnSafeMove (board, side, turn) ((startPos, movingPiece), toPos) =
   let updatedBoard = [(pos, piece) | (pos, piece) <- board, pos /= startPos, pos /= toPos]
     in ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)
