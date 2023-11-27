@@ -16,15 +16,13 @@ whoWillWin game@(_, side, _) =
     -- winning State can be a tie or a WinningSide side
     Just winningState -> winningState
     Nothing ->
-      let nextGameWinners :: [Winner]
-          nextGameWinners = [whoWillWin nextGame | nextGame <- allNextGame game]
-          determineWinner :: [Winner] -> Winner
-          determineWinner winners
-            | all (== WinningSide (opponent side)) winners = WinningSide (opponent side)
-            | (WinningSide side) `elem` winners = WinningSide side
-            | otherwise = Tie
-       in determineWinner nextGameWinners
-
+          let winners :: [Winner]
+              winners = [whoWillWin nextGame | nextGame <- allNextGame game]
+              bestWinner
+                | all (== WinningSide (opponent side)) winners = WinningSide (opponent side)
+                | (WinningSide side) `elem` winners = WinningSide side
+                | otherwise = Tie
+          in bestWinner
 gameMoveAssociation :: Game -> [(Game, Move)]
 gameMoveAssociation game@(board, side, turn) =
   let allMoves = allLegalMoves game
