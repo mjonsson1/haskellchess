@@ -1,10 +1,7 @@
 module Chess where
 
-import Data.Char
 import Data.List
-import Data.List.Split (splitOn)
 import Data.Maybe
-import Text.XHtml (rows)
 
 --                                               DATATYPES
 
@@ -131,10 +128,10 @@ pieceLegalMoves square@((x, y), (Pawn, Black)) board =
    in [(square, pos) | pos <- allPos]
 
 allLegalMoves :: Game -> [Move]
-allLegalMoves (board, side, _) = 
+allLegalMoves (board, side, _) =
   let allAllySquares :: [Square]
       allAllySquares = filter (\(_, (_, pSide)) -> pSide == side) board
-  in concat [pieceLegalMoves sq board | sq <- allAllySquares]
+   in concat [pieceLegalMoves sq board | sq <- allAllySquares]
 
 -- look for king, if still have both king --> return Nothing, otherwise return winning side
 -- win :: Board -> Maybe Side
@@ -166,4 +163,4 @@ makeMove (board, side, turn) move@((startPos, movingPiece), toPos)
 makeUnSafeMove :: Game -> Move -> Game
 makeUnSafeMove (board, side, turn) ((startPos, movingPiece), toPos) =
   let updatedBoard = [(pos, piece) | (pos, piece) <- board, pos /= startPos, pos /= toPos]
-    in ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)
+   in ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)

@@ -1,23 +1,7 @@
 import Chess
-import Data.Char (toLower)
 import InputOutput
 import Solver
-
-
-import Chess
-import Control.Exception (bracket)
-import Data.Char
-import Data.List
-import Data.List.Split (splitOn)
-import Data.Maybe
-import Debug.Trace
-import Solver
-import System.Directory.Internal.Prelude (getArgs)
 import System.Environment
-import System.FilePath
-import System.IO
-import Text.Parsec (putState)
-import Text.XHtml (rows)
 
 {-
 toLowerString :: String -> String
