@@ -153,7 +153,7 @@ putBestMove game = do
       (board, side, turn) = makeUnSafeMove game bm
   putStrLn $ showBoard board
 
-main :: IO ()
+{- main :: IO ()
 main =
   do
     args <- getArgs
@@ -163,3 +163,4 @@ main =
     putStrLn $ showBoard initialboard
     putStrLn "new board: "
     putBestMove game
+-}
