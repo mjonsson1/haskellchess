@@ -9,19 +9,19 @@ import System.IO
 
 --                                        SHOWING BOARD
 
-showPiece :: Piece -> String
-showPiece (Rook, Black) = " ♖ "
-showPiece (Knight, Black) = " ♘ "
-showPiece (Bishop, Black) = " ♗ "
-showPiece (Queen, Black) = " ♕ "
-showPiece (King, Black) = " ♔ "
-showPiece (Pawn, Black) = " ♙ "
-showPiece (Rook, White) = " ♜ "
-showPiece (Knight, White) = " ♞ "
-showPiece (Bishop, White) = " ♝ "
-showPiece (Queen, White) = " ♛ "
-showPiece (King, White) = " ♚ "
-showPiece (Pawn, White) = " ♟ "
+showPiecePretty :: Piece -> String
+showPiecePretty (Rook, Black) = " ♖ "
+showPiecePretty (Knight, Black) = " ♘ "
+showPiecePretty (Bishop, Black) = " ♗ "
+showPiecePretty (Queen, Black) = " ♕ "
+showPiecePretty (King, Black) = " ♔ "
+showPiecePretty (Pawn, Black) = " ♙ "
+showPiecePretty (Rook, White) = " ♜ "
+showPiecePretty (Knight, White) = " ♞ "
+showPiecePretty (Bishop, White) = " ♝ "
+showPiecePretty (Queen, White) = " ♛ "
+showPiecePretty (King, White) = " ♚ "
+showPiecePretty (Pawn, White) = " ♟ "
 
 -- Returns a string representing specified row on the board
 showRow :: Int -> Side -> Board -> String
@@ -31,7 +31,7 @@ showRow y Black board = concat $ [show y, "  "] ++ intersperse "|" [lookupPiece 
 -- Returns a string of the piece symbol at the given location on the board
 lookupPiece :: Pos -> Board -> String
 lookupPiece pos board = case lookup pos board of
-  Just piece -> showPiece piece
+  Just piece -> showPiecePretty piece
   Nothing -> "   "
 
 -- Converts a board to a string when printed to output.
@@ -46,11 +46,10 @@ showBoard board =
 --                                        TEXT REPRESENTATION
 --                                        STRING TO BOARD
 
-pieceFromLetter :: String -> Maybe Piece
-pieceFromLetter s =
+stringToPiece :: String -> Maybe Piece
+stringToPiece s =
   case s of
     "_" -> Nothing
-    "" -> Nothing
     "r" -> Just (Rook, Black)
     "n" -> Just (Knight, Black)
     "b" -> Just (Bishop, Black)
@@ -63,6 +62,7 @@ pieceFromLetter s =
     "Q" -> Just (Queen, White)
     "K" -> Just (King, White)
     "P" -> Just (Pawn, White)
+    _   -> Nothing
 
 buildSquare :: ((Int, Int), Maybe Piece) -> Maybe Square
 buildSquare ((colNum, rowNum), piece) =
@@ -73,7 +73,7 @@ buildSquare ((colNum, rowNum), piece) =
 rowToBoard :: String -> Int -> [Square]
 rowToBoard rowString rowNum =
   let pieces = splitOn " " rowString
-   in catMaybes [buildSquare ((colNum, rowNum), pieceFromLetter piece) | (colNum, piece) <- zip [1 ..] pieces]
+   in catMaybes [buildSquare ((colNum, rowNum), stringToPiece piece) | (colNum, piece) <- zip [1 ..] pieces]
 
 -- parses our simple board notation and converts to a Board
 stringToBoard :: String -> Board
@@ -86,36 +86,36 @@ stringToBoard boardString =
 pieceToString :: Maybe Piece -> String
 pieceToString piece =
   case piece of
-    Nothing -> "_ "
-    Just (Rook, Black) -> "r "
-    Just (Knight, Black) -> "n "
-    Just (Bishop, Black) -> "b "
-    Just (Queen, Black) -> "q "
-    Just (King, Black) -> "k "
-    Just (Pawn, Black) -> "p "
-    Just (Rook, White) -> "R "
-    Just (Knight, White) -> "N "
-    Just (Bishop, White) -> "B "
-    Just (Queen, White) -> "Q "
-    Just (King, White) -> "K "
-    Just (Pawn, White) -> "P "
+    Nothing -> "_"
+    Just (Rook, Black) -> "r"
+    Just (Knight, Black) -> "n"
+    Just (Bishop, Black) -> "b"
+    Just (Queen, Black) -> "q"
+    Just (King, Black) -> "k"
+    Just (Pawn, Black) -> "p"
+    Just (Rook, White) -> "R"
+    Just (Knight, White) -> "N"
+    Just (Bishop, White) -> "B"
+    Just (Queen, White) -> "Q"
+    Just (King, White) -> "K"
+    Just (Pawn, White) -> "P"
 
 rowToString :: Board -> Int -> String
-rowToString board rowNum = (concat [pieceToString (lookup (colNum, rowNum) board) | colNum <- [1 .. 8]]) ++ "\n"
+rowToString board rowNum = unwords [pieceToString (lookup (colNum, rowNum) board) | colNum <- [1 .. 8]]
 
 boardToString :: Board -> String
-boardToString board = concat [rowToString (filter (\((column, row), piece) -> row == x) board) x | x <- [8, 7 .. 1]]
+boardToString board = unlines [rowToString (filter (\((column, row), piece) -> row == x) board) x | x <- [8, 7 .. 1]]
 
 --                                        GAME TO STRING
 readGame :: String -> Game
 readGame gameString =
-  let (headerRows : boardRows) = splitOn "\n" gameString
+  let (headerRows : boardRows) = lines gameString
       header = splitOn " " headerRows
       side = case (head header) of
         "W" -> White
         "B" -> Black
       turnsLeft = read (last header)
-      board = stringToBoard (intercalate "\n" boardRows)
+      board = stringToBoard (unlines boardRows)
    in (board, side, turnsLeft)
 
 showGame :: Game -> String
