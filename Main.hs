@@ -3,7 +3,8 @@ import InputOutput
 import Solver
 import System.Environment
 
-{-
+import Data.Char
+
 toLowerString :: String -> String
 toLowerString = map toLower
 
@@ -62,30 +63,44 @@ recurReadInput game = do
 startTurn :: Game -> IO ()
 startTurn (board, sideOfPlayer, turnNum) = do
   putStrLn $ showBoard board
-  if win board == Nothing && turnNum >= 0
+  if whoHasWon (board,sideOfPlayer, turnNum) == Nothing && turnNum > 0
     then do
       putStrLn ("Turns remaining:  " ++ (show turnNum) ++ ". Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
       recurReadInput (board, sideOfPlayer, turnNum)
     else do
-      putStrLn (show (win board) ++ " is the winner!")
+      putStrLn (show (whoHasWon (board,sideOfPlayer, turnNum)) ++ " is the winner!")
 
--- main :: IO ()
--- main = do
---   startTurn (initialBoard, White, 30)
 
--- printAllBoard :: [Board] -> IO ()
--- printAllBoard [b] = do putStrLn $ showBoard b
--- printAllBoard (b : bs) = do
---   putStrLn $ showBoard b
---   printAllBoard bs
+--This main function just runs a two player game from the start
+{-
+main :: IO ()
+main = do
+  startTurn (initialBoard, White, 30)
 
--- main :: IO ()
--- main = do
---   let newGames = allNextGame (initialBoard, White, 50)
---   let allBoards = [board | (board, _, _) <- newGames]
---   printAllBoard allBoards
+printAllBoard :: [Board] -> IO ()
+printAllBoard [b] = do putStrLn $ showBoard b
+printAllBoard (b : bs) = do
+  putStrLn $ showBoard b
+  printAllBoard bs
 -}
 
+--This main allows you to load in specific tester case boards to play in 2 player format
+
+main :: IO ()
+main = 
+  do
+    args <- getArgs
+    let fname = head args
+    game@(initialboard, _, _) <- loadGame fname
+    startTurn game
+{-
+main :: IO ()
+main = do
+  let newGames = allNextGame (initialBoard, White, 50)
+  let allBoards = [board | (board, _, _) <- newGames]
+  printAllBoard allBoards
+
+--This  main allows you to feed a tester board game state to check AI behavior
 main :: IO ()
 main =
   do
@@ -96,3 +111,4 @@ main =
     putStrLn $ showBoard initialboard
     putStrLn "new board: "
     putBestMove game
+-}
