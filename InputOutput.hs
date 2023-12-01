@@ -36,12 +36,15 @@ lookupPiece pos board = case lookup pos board of
 
 -- Converts a board to a string when printed to output.
 -- If not printed to output, newlines and pieces are not displayed properly.
-showBoard :: Board -> String
-showBoard board =
+
+--TODO: change from board -> String to Game -> String
+showPrettyGame :: Game -> String
+showPrettyGame (board, side, turn) =
   let rows = [showRow y White board | y <- [8, 7 .. 1]]
       separator = "   " ++ replicate (31) '-'
       coordinateLine = intercalate "   " ["", "a", "b", "c", "d", "e", "f", "g", "h"]
-   in unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
+      prettyBoard = unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
+  in "Current side: " ++ (show side) ++ "\n" ++ "Num of turn left: " ++ (show turn) ++ "\n" ++ prettyBoard    
 
 --                                        TEXT REPRESENTATION
 --                                        STRING TO BOARD
@@ -142,8 +145,9 @@ loadGame filepath = do
 putBestMove :: Game -> IO ()
 putBestMove game = do
   let bm = bestMove game
-      (board, side, turn) = makeUnSafeMove game bm
-  putStrLn $ showBoard board
+      newGame = makeUnSafeMove game bm
+  putStrLn $ "You should make move: " ++ show bm
+  putStrLn $ showPrettyGame newGame 
 
 {- main :: IO ()
 main =

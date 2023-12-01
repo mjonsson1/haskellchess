@@ -161,6 +161,10 @@ makeMove (board, side, turn) move@((startPos, movingPiece), toPos)
 
 -- making a move without considering whether it is legal
 makeUnSafeMove :: Game -> Move -> Game
-makeUnSafeMove (board, side, turn) ((startPos, movingPiece), toPos) =
+makeUnSafeMove (board, side, turn) move@((startPos, movingPiece), toPos) =
   let updatedBoard = [(pos, piece) | (pos, piece) <- board, pos /= startPos, pos /= toPos]
-   in ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)
+  in case move of 
+      (((_,7),(Pawn , White)), (_,8)) -> ((toPos, (Queen, White)) : updatedBoard, opponent side, turn - 1)
+      (((_,2),(Pawn , Black)), (_,1)) -> ((toPos, (Queen, Black)) : updatedBoard, opponent side, turn - 1)
+      _                               -> ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)
+
