@@ -106,9 +106,8 @@ main =
   do
     args <- getArgs
     let fname = head args
-    game@(initialboard, _, _) <- loadGame fname
-    putStrLn "initial board: "
-    putStrLn $ showBoard initialboard
-    putStrLn "new board: "
+    game <- loadGame fname
+    putStrLn "Initial board: "
+    putStrLn $ showPrettyGame game
     putBestMove game
 -}
