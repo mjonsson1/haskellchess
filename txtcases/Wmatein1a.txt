@@ -1,9 +1,9 @@
 W 3
-r _ b q k b _ r 
-p p _ n p p p p 
-_ _ p _ _ n _ _ 
-_ _ _ _ _ _ _ _ 
-_ _ _ P N _ _ _ 
-_ _ _ _ _ _ _ _ 
-P P P _ Q P P P 
-R _ B _ K B N R 
+r _ b q k b _ r
+p p _ n p p p p
+_ _ p _ _ n _ _
+_ _ _ _ _ _ _ _
+_ _ _ P N _ _ _
+_ _ _ _ _ _ _ _
+P P P _ Q P P P
+R _ B _ K B N R
