@@ -1,9 +1,9 @@
 B 5
-_ _ _ k _ b n r 
-_ p _ _ _ p p p 
-_ _ _ _ _ _ _ _ 
-P _ _ p p _ _ _ 
-_ _ _ n _ _ _ _ 
-_ _ P _ K _ _ _ 
-_ _ q _ P P P P 
-_ R B _ Q B N R 
+_ _ _ k _ b n r
+_ p _ _ _ p p p
+_ _ _ _ _ _ _ _
+P _ _ p p _ _ _
+_ _ _ n _ _ _ _
+_ _ P _ K _ _ _
+_ _ q _ P P P P
+_ R B _ Q B N R

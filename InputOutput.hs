@@ -5,6 +5,7 @@ import Data.List
 import Data.List.Split (splitOn)
 import Data.Maybe
 import Solver
+import Debug.Trace
 import System.IO
 
 --                                        SHOWING BOARD
@@ -52,7 +53,6 @@ showPrettyGame (board, side, turn) =
 stringToPiece :: String -> Maybe Piece
 stringToPiece s =
   case s of
-    "_" -> Nothing
     "r" -> Just (Rook, Black)
     "n" -> Just (Knight, Black)
     "b" -> Just (Bishop, Black)
@@ -65,24 +65,22 @@ stringToPiece s =
     "Q" -> Just (Queen, White)
     "K" -> Just (King, White)
     "P" -> Just (Pawn, White)
-    _   -> Nothing
+    _ -> Nothing
 
 buildSquare :: ((Int, Int), Maybe Piece) -> Maybe Square
-buildSquare ((colNum, rowNum), piece) =
-  case piece of
-    Nothing -> Nothing
-    Just p -> Just ((colNum, rowNum), p)
+buildSquare ((colNum, rowNum), Just piece) = Just ((colNum, rowNum), piece)
+buildSquare ((colNum, rowNum), Nothing) = Nothing
 
-rowToBoard :: String -> Int -> [Square]
+rowToBoard :: String -> Int -> Maybe [Square]
 rowToBoard rowString rowNum =
   let pieces = splitOn " " rowString
-   in catMaybes [buildSquare ((colNum, rowNum), stringToPiece piece) | (colNum, piece) <- zip [1 ..] pieces]
+   in sequence [buildSquare ((colNum, rowNum), stringToPiece piece) | (colNum, piece) <- zip [1 ..] pieces, piece /= "_"]
 
 -- parses our simple board notation and converts to a Board
-stringToBoard :: String -> Board
+stringToBoard :: String -> Maybe Board
 stringToBoard boardString =
-  let rows = splitOn " \n" boardString
-   in concat [rowToBoard row rowNum | (rowNum, row) <- zip [8, 7 .. 1] rows]
+  let rows = lines boardString
+   in fmap concat $ sequence [rowToBoard row rowNum | (rowNum, row) <- zip [8, 7 .. 1] rows]
 
 --                                        BOARD TO STRING
 
@@ -112,14 +110,19 @@ boardToString board = unlines [rowToString (filter (\((column, row), piece) -> r
 --                                        GAME TO STRING
 readGame :: String -> Game
 readGame gameString =
-  let (headerRows : boardRows) = lines gameString
-      header = splitOn " " headerRows
+  let (headerRow : boardRows) = lines gameString
+      header = splitOn " " headerRow
       side = case (head header) of
         "W" -> White
         "B" -> Black
       turnsLeft = read (last header)
-      board = stringToBoard (unlines boardRows)
-   in (board, side, turnsLeft)
+      board = stringToBoard (intercalate "\n" boardRows)
+   in 
+    if board == Nothing
+      then error "Failed to read board!"
+      else 
+        let Just newBoard = board
+        in (newBoard, side, turnsLeft)
 
 showGame :: Game -> String
 showGame (board, side, turnsLeft) =
