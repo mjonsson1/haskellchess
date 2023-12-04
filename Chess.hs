@@ -5,9 +5,9 @@ import Data.Maybe
 
 --                                               DATATYPES
 
-data PieceType = Pawn | King | Bishop | Knight | Queen | Rook deriving (Show, Eq)
+data PieceType = Pawn | King | Bishop | Knight | Queen | Rook deriving (Show, Eq, Ord)
 
-data Side = Black | White deriving (Show, Eq)
+data Side = Black | White deriving (Show, Eq, Ord)
 
 data Winner = WinningSide Side | Tie deriving (Show, Eq)
 
@@ -23,7 +23,7 @@ type Move = (Square, Pos) -- deriving (Show, Eq) FOR LATER **
 
 type Game = (Board, Side, Int)
 
-
+type Rating = Int
 
 --                                               BOARDS
 initialBoard :: Board
@@ -48,6 +48,9 @@ initialBoard =
          ((7, 8), (Knight, Black)),
          ((8, 8), (Rook, Black))
        ]
+
+initialGame :: Game
+initialGame = (initialBoard, White, 50)
 
 emptyBoard :: Board
 emptyBoard = []
