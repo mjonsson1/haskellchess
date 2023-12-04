@@ -2,6 +2,7 @@ module Solver where
 
 import Chess
 import Debug.Trace
+import Data.List
 
 allNextGame :: Game -> [Game]
 allNextGame game@(board, side, turn) =
@@ -63,3 +64,28 @@ rateGame :: Game -> Int
 rateGame (board, side, int) = 
     let (white, black) = foldr (\(_, (pieceType, side)) (white, black) -> if side == White then (white + pieceValue pieceType, black) else (white, black + pieceValue pieceType)) (0, 0) board
       in white - black
+
+
+whoMightWin :: Game -> Int -> (Int, Move)
+
+--TODO turn error check so that we don't over analyze after turns are 0
+whoMightWin (board, White, turn) remDepth
+  |remDepth == 1 = maximumBy (\(x1,_) (x2,_) -> compare x1 x2) [(rateGame nextGame, nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,White, turn)]
+  |remDepth > 1 = maximumBy (\(x1,_) (x2,_) -> compare x1 x2) [( fst (whoMightWin nextGame (remDepth-1)), nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,White, turn)]
+
+whoMightWin (board, Black, turn) remDepth
+  |remDepth == 1 = minimumBy (\(x1,_) (x2,_) -> compare x1 x2) [(rateGame nextGame, nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,Black, turn)]
+  |remDepth > 1 = minimumBy (\(x1,_) (x2,_) -> compare x1 x2) [( fst (whoMightWin nextGame (remDepth-1)), nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,Black, turn)]
+
+{-
+minimax :: Int -> GameState -> Int
+minimax depth gameState
+  | depth == 0 = rateGame (board gameState)
+  | otherwise = if currentPlayer gameState == White
+                  then maximum (map (minimax (depth - 1)) nextStates)
+                  else minimum (map (minimax (depth - 1)) nextStates)
+  where
+    possibleMoves = generateMoves gameState -- Implement a function to generate all possible moves
+    nextStates = map makeMove possibleMoves
+    makeMove move = undefined -- Implement a function to apply a move to the game state
+-}
