@@ -48,3 +48,18 @@ bestMove game@(_, side, _) =
             Nothing -> snd (head outcomes)
 
 -- TODO: Breadth first find best move maybe, so you can check mate in 1 instead of 5
+
+pieceValue :: PieceType -> Int
+pieceValue Pawn = 1
+pieceValue Bishop = 3
+pieceValue Knight = 3
+pieceValue Rook = 5
+pieceValue Queen = 9
+pieceValue King = 10000
+
+-- Optimized via folds
+-- TODO: edge cases if the position is winning / losing
+rateGame :: Game -> Int
+rateGame (board, side, int) = 
+    let (white, black) = foldr (\(_, (pieceType, side)) (white, black) -> if side == White then (white + pieceValue pieceType, black) else (white, black + pieceValue pieceType)) (0, 0) board
+      in white - black
