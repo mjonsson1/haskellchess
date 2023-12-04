@@ -1,13 +1,14 @@
 module Solver where
 
 import Chess
-import Debug.Trace
 import Data.List
+import Data.Maybe
+import Debug.Trace
 
 allNextGame :: Game -> [Game]
 allNextGame game@(board, side, turn) =
   let allMoves = allLegalMoves game
-  in [makeUnSafeMove game move | move <- allMoves]
+   in [makeUnSafeMove game move | move <- allMoves]
 
 whoWillWin :: Game -> Winner
 whoWillWin game@(_, side, _) =
@@ -50,42 +51,44 @@ bestMove game@(_, side, _) =
 
 -- TODO: Breadth first find best move maybe, so you can check mate in 1 instead of 5
 
-pieceValue :: PieceType -> Int
-pieceValue Pawn = 1
-pieceValue Bishop = 3
-pieceValue Knight = 3
-pieceValue Rook = 5
-pieceValue Queen = 9
-pieceValue King = 10000
+-- -- Optimized via folds
+-- -- TODO: edge cases if the position is winning / losing
+-- rateGame :: Game -> Rating -- check if the game is won and also tie! if so, give highest possible marks
+-- rateGame (board, side, int) =
+--   let (white, black) = foldr (\(_, (pieceType, side)) (white, black) -> if side == White then (white + pieceValue pieceType, black) else (white, black + pieceValue pieceType)) (0, 0) board
+--    in white - black
+
+typeValue :: PieceType -> Int
+typeValue Pawn = 1
+typeValue Bishop = 3
+typeValue Knight = 3
+typeValue Rook = 5
+typeValue Queen = 9
+typeValue King = 10000
+
+pieceValue (pieceType, White) = typeValue pieceType
+pieceValue (pieceType, Black) = -(typeValue pieceType)
 
 -- Optimized via folds
 -- TODO: edge cases if the position is winning / losing
-rateGame :: Game -> Int
-rateGame (board, side, int) = 
-    let (white, black) = foldr (\(_, (pieceType, side)) (white, black) -> if side == White then (white + pieceValue pieceType, black) else (white, black + pieceValue pieceType)) (0, 0) board
-      in white - black
+rateGame :: Game -> Rating
+rateGame (board, side, int) =
+  foldr (\(_, piece) total -> total + pieceValue piece) 0 board
 
+whoMightWin :: Game -> Int -> (Rating, Maybe Move)
+whoMightWin game@(_, player, turn) remDepth
+  | remDepth == 0 || isJust (whoHasWon game) = (rateGame game, Nothing)
+  | otherwise =
+      let ratingMoveAssociation = [(fst (whoMightWin nextGame (remDepth - 1)), Just nextMove) | (nextGame, nextMove) <- gameMoveAssociation game]
+       in selectFor player ratingMoveAssociation
 
-whoMightWin :: Game -> Int -> (Int, Move)
-
---TODO turn error check so that we don't over analyze after turns are 0
-whoMightWin (board, White, turn) remDepth
-  |remDepth == 1 = maximumBy (\(x1,_) (x2,_) -> compare x1 x2) [(rateGame nextGame, nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,White, turn)]
-  |remDepth > 1 = maximumBy (\(x1,_) (x2,_) -> compare x1 x2) [( fst (whoMightWin nextGame (remDepth-1)), nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,White, turn)]
-
-whoMightWin (board, Black, turn) remDepth
-  |remDepth == 1 = minimumBy (\(x1,_) (x2,_) -> compare x1 x2) [(rateGame nextGame, nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,Black, turn)]
-  |remDepth > 1 = minimumBy (\(x1,_) (x2,_) -> compare x1 x2) [( fst (whoMightWin nextGame (remDepth-1)), nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,Black, turn)]
-
-{-
-minimax :: Int -> GameState -> Int
-minimax depth gameState
-  | depth == 0 = rateGame (board gameState)
-  | otherwise = if currentPlayer gameState == White
-                  then maximum (map (minimax (depth - 1)) nextStates)
-                  else minimum (map (minimax (depth - 1)) nextStates)
-  where
-    possibleMoves = generateMoves gameState -- Implement a function to generate all possible moves
-    nextStates = map makeMove possibleMoves
-    makeMove move = undefined -- Implement a function to apply a move to the game state
--}
+selectFor :: Side -> [(Rating, Maybe Move)] -> (Rating, Maybe Move)
+selectFor _ [r] = r
+selectFor White (r : rs) =
+  if fst r > 1000
+    then r
+    else max r (selectFor White rs)
+selectFor Black (r : rs) =
+  if fst r < -1000
+    then r
+    else min r (selectFor Black rs)

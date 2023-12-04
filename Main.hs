@@ -80,7 +80,7 @@ startTurn game@(board, sideOfPlayer, turnNum) = do
 data Flag = Help | Quick | Number String | Start String | TwoPlayer deriving (Eq, Show)
 options :: [OptDescr  Flag]
 options = [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
-            Option ['w'] ["winner"] (ReqArg)
+            Option ['w'] ["winner"] (ReqArg) "Print out winning move with absolute solver."
             ,Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
                 {- "Start at fortune <num>. Defaults to value based on name, or 1 if quick mode." -}
           ]
