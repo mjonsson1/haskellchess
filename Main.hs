@@ -79,11 +79,9 @@ startTurn game@(board, sideOfPlayer, turnNum) = do
 
 data Flag = Help | Quick | Number String | Start String | TwoPlayer deriving (Eq, Show)
 options :: [OptDescr  Flag]
-options = [ {-Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
-          , Option ['q'] ["quick","quiet"] (NoArg Quick) "Print the fortunes and exit."
-          , Option ['n'] ["num"] (ReqArg Number "<num>") "Print <num> fortunes at a time."
-          , Option ['s'] ["start"] (ReqArg Start "<num>") 
-          ,-} Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
+options = [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
+            Option ['w'] ["winner"] (ReqArg)
+            ,Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
                 {- "Start at fortune <num>. Defaults to value based on name, or 1 if quick mode." -}
           ]
 
@@ -92,17 +90,20 @@ main :: IO ()
 main = 
   do args <- getArgs
      let (flags, inputs, errors) =  getOpt Permute options args
-     {-let fname = case args of
-                   [] -> "fortunes.txt"
-                   (x:xs) -> x-}
      let fname = if null inputs then "./txtcases/initialBoard.txt" else head inputs
      game@(_, _, _) <- loadGame fname
-     if TwoPlayer `elem` flags
-     then do
-      startTurn game
-      else
-        error "Not a valid Flag"
+     if Help `elem` flags
+       then putStrLn $ usageInfo "Fortunes [options] [file]" options
+       else
+          if TwoPlayer `elem` flags
+          then
+              startTwoPlayer game
+            else
+              error "Not a valid Flag"
 
+
+startTwoPlayer :: Game -> IO ()
+startTwoPlayer game = startTurn game
 -- This main function just runs a two player game from the start
 {-
 main :: IO ()
