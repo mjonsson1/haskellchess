@@ -3,7 +3,11 @@ module Solver where
 import Chess
 import Debug.Trace
 
--- Takes a game and return the outcome of either someone winning or a tie
+allNextGame :: Game -> [Game]
+allNextGame game@(board, side, turn) =
+  let allMoves = allLegalMoves game
+  in [makeUnSafeMove game move | move <- allMoves]
+
 whoWillWin :: Game -> Winner
 whoWillWin game@(_, side, _) =
   case whoHasWon game of
