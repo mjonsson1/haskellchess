@@ -50,14 +50,6 @@ bestMove game@(_, side, _) =
 
 -- TODO: Breadth first find best move maybe, so you can check mate in 1 instead of 5
 
--- pieceValue :: PieceType -> Int
--- pieceValue Pawn = 1
--- pieceValue Bishop = 3
--- pieceValue Knight = 3
--- pieceValue Rook = 5
--- pieceValue Queen = 9
--- pieceValue King = 10000
-
 -- -- Optimized via folds
 -- -- TODO: edge cases if the position is winning / losing
 -- rateGame :: Game -> Rating -- check if the game is won and also tie! if so, give highest possible marks
@@ -82,8 +74,6 @@ rateGame :: Game -> Rating
 rateGame (board, side, int) =
   foldr (\(_, piece) total -> total + pieceValue piece) 0 board
 
--- foldr (\(_, (pieceType, side)) total -> if side == White then total + typeValue pieceType else total - typeValue pieceType) 0 board
-
 whoMightWin :: Game -> Int -> (Rating, Maybe Move)
 -- TODO turn error check so that we don't over analyze after turns are 0
 whoMightWin game@(_, player, turn) remDepth
@@ -95,16 +85,3 @@ whoMightWin game@(_, player, turn) remDepth
 
 selectFor White = maximumBy (\(x1, _) (x2, _) -> compare x1 x2)
 selectFor Black = minimumBy (\(x1, _) (x2, _) -> compare x1 x2)
-
-{-
-minimax :: Int -> GameState -> Int
-minimax depth gameState
-  | depth == 0 = rateGame (board gameState)
-  | otherwise = if currentPlayer gameState == White
-                  then maximum (map (minimax (depth - 1)) nextStates)
-                  else minimum (map (minimax (depth - 1)) nextStates)
-  where
-    possibleMoves = generateMoves gameState -- Implement a function to generate all possible moves
-    nextStates = map makeMove possibleMoves
-    makeMove move = undefined -- Implement a function to apply a move to the game state
--}
