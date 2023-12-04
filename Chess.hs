@@ -5,9 +5,9 @@ import Data.Maybe
 
 --                                               DATATYPES
 
-data PieceType = Pawn | King | Bishop | Knight | Queen | Rook deriving (Show, Eq)
+data PieceType = Pawn | King | Bishop | Knight | Queen | Rook deriving (Show, Eq, Ord)
 
-data Side = Black | White deriving (Show, Eq)
+data Side = Black | White deriving (Show, Eq, Ord)
 
 data Winner = WinningSide Side | Tie deriving (Show, Eq)
 

@@ -2,6 +2,7 @@ module Solver where
 
 import Chess
 import Data.List
+import Data.Maybe
 import Debug.Trace
 
 allNextGame :: Game -> [Game]
@@ -75,13 +76,19 @@ rateGame (board, side, int) =
   foldr (\(_, piece) total -> total + pieceValue piece) 0 board
 
 whoMightWin :: Game -> Int -> (Rating, Maybe Move)
--- TODO turn error check so that we don't over analyze after turns are 0
 whoMightWin game@(_, player, turn) remDepth
-  | remDepth == 0 || (whoHasWon game /= Nothing) = (rateGame game, Nothing)
+  | remDepth == 0 || isJust (whoHasWon game) = (rateGame game, Nothing)
   | otherwise =
-      selectFor
-        player
-        [(fst (whoMightWin nextGame (remDepth - 1)), Just nextMove) | (nextGame, nextMove) <- gameMoveAssociation game]
+      let ratingMoveAssociation = [(fst (whoMightWin nextGame (remDepth - 1)), Just nextMove) | (nextGame, nextMove) <- gameMoveAssociation game]
+       in selectFor player ratingMoveAssociation
 
-selectFor White = maximumBy (\(x1, _) (x2, _) -> compare x1 x2)
-selectFor Black = minimumBy (\(x1, _) (x2, _) -> compare x1 x2)
+selectFor :: Side -> [(Rating, Maybe Move)] -> (Rating, Maybe Move)
+selectFor _ [r] = r
+selectFor White (r : rs) =
+  if fst r > 1000
+    then r
+    else max r (selectFor White rs)
+selectFor Black (r : rs) =
+  if fst r < -1000
+    then r
+    else min r (selectFor Black rs)
