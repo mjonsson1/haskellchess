@@ -1,15 +1,17 @@
 import Chess
+import Data.Char
+import Data.Maybe (isNothing)
 import InputOutput
 import Solver
 import System.Environment
 
-import Data.Char
-
 toLowerString :: String -> String
 toLowerString = map toLower
 
+letters :: [Char]
 letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 
+numStr :: [Char]
 numStr = ['1', '2', '3', '4', '5', '6', '7', '8']
 
 readPos :: (String, String) -> Maybe (Pos, Pos)
@@ -25,7 +27,6 @@ readPos ([letter1, num1], [letter2, num2]) =
         return ((x1, y1), (x2, y2))
 readPos _ = Nothing
 
--- EDIT BEGINS HERE
 readMove :: String -> Game -> Maybe Move
 readMove line (board, side, turn) =
   let split :: [String]
@@ -61,54 +62,58 @@ recurReadInput game = do
 
 -- print the current turn's board and recursively ask for input
 startTurn :: Game -> IO ()
-startTurn (board, sideOfPlayer, turnNum) = do
-  putStrLn $ showBoard board
-  if whoHasWon (board,sideOfPlayer, turnNum) == Nothing && turnNum > 0
-    then do
-      putStrLn ("Turns remaining:  " ++ (show turnNum) ++ ". Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
+startTurn game@(board, sideOfPlayer, turnNum) = do
+  putStrLn ""
+  putStrLn $ showPrettyGame game
+  case whoHasWon (board, sideOfPlayer, turnNum) of
+    Nothing -> do
+      putStrLn ("Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
       recurReadInput (board, sideOfPlayer, turnNum)
-    else do
-      putStrLn (show (whoHasWon (board,sideOfPlayer, turnNum)) ++ " is the winner!")
+    Just end -> case end of
+      WinningSide side -> putStrLn (show side ++ " is the winner!")
+      Tie -> putStrLn "It's a tie!"
 
-
---This main function just runs a two player game from the start
+-- This main function just runs a two player game from the start
 {-
 main :: IO ()
 main = do
   startTurn (initialBoard, White, 30)
-
-printAllBoard :: [Board] -> IO ()
-printAllBoard [b] = do putStrLn $ showBoard b
-printAllBoard (b : bs) = do
-  putStrLn $ showBoard b
-  printAllBoard bs
 -}
 
---This main allows you to load in specific tester case boards to play in 2 player format
+-- This main allows you to load in specific tester case boards to play in 2 player format
 
-main :: IO ()
-main = 
-  do
-    args <- getArgs
-    let fname = head args
-    game@(initialboard, _, _) <- loadGame fname
-    startTurn game
-{-
-main :: IO ()
-main = do
-  let newGames = allNextGame (initialBoard, White, 50)
-  let allBoards = [board | (board, _, _) <- newGames]
-  printAllBoard allBoards
-
---This  main allows you to feed a tester board game state to check AI behavior
 main :: IO ()
 main =
   do
     args <- getArgs
     let fname = head args
     game@(initialboard, _, _) <- loadGame fname
-    putStrLn "initial board: "
-    putStrLn $ showBoard initialboard
-    putStrLn "new board: "
+    startTurn game
+
+-- This main allows you to print all next game states
+{-
+printAllBoard :: [Board] -> IO ()
+printAllBoard [b] = do putStrLn $ showBoard b
+printAllBoard (b : bs) = do
+  putStrLn $ showBoard b
+  printAllBoard bs
+
+main :: IO ()
+main = do
+  let newGames = allNextGame (initialBoard, White, 50)
+  let allBoards = [board | (board, _, _) <- newGames]
+  printAllBoard allBoards
+-}
+
+-- This  main allows you to feed a tester board game state to check AI behavior
+{-
+main :: IO ()
+main =
+  do
+    args <- getArgs
+    let fname = head args
+    game <- loadGame fname
+    putStrLn "Initial board: "
+    putStrLn $ showPrettyGame game
     putBestMove game
 -}

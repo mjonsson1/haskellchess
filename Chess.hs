@@ -71,12 +71,14 @@ opponent :: Side -> Side
 opponent White = Black
 opponent Black = White
 
+-- Return True if is ally, False if opponent square or empty square
 isAlly :: Side -> Maybe Piece -> Bool
 isAlly side maybePiece =
   case maybePiece of
     Nothing -> False
     Just (_, pieceSide) -> pieceSide /= opponent side
 
+-- Return True if is opponent, False if ally square or empty square
 isOpponent :: Side -> Maybe Piece -> Bool
 isOpponent side maybePiece =
   case maybePiece of
@@ -113,7 +115,6 @@ pieceLegalMoves square@((x, y), (King, side)) board =
       legalSquares = filter (\pos -> not (isAlly side (lookup pos board))) surroundingWithoutStart
    in [(square, pos) | pos <- legalSquares]
 -- PAWN
--- TODO: delete bound check for Pawn, bc if a y is at the edge: turn into queen
 pieceLegalMoves square@((x, y), (Pawn, White)) board =
   let pushOnce = [(x, y + 1) | inBound (x, y + 1), isNothing (lookup (x, y + 1) board)]
       pushTwice = [(x, y + 2) | y == 2, isNothing (lookup (x, y + 2) board), isNothing (lookup (x, y + 1) board)]
@@ -133,14 +134,8 @@ allLegalMoves (board, side, _) =
       allAllySquares = filter (\(_, (_, pSide)) -> pSide == side) board
    in concat [pieceLegalMoves sq board | sq <- allAllySquares]
 
--- look for king, if still have both king --> return Nothing, otherwise return winning side
--- win :: Board -> Maybe Side
--- win board =
---   let tmp = filter (\((_, _), (pType, _)) -> pType == King) board
---    in if length tmp /= 2 then Just (snd (snd (head tmp))) else Nothing
-
--- if game is ongoing (2 kings, turn != 0), return Nothing
--- else return just Tie or just WinningSide side
+-- if game is ongoing (2 kings, turn > 0), return Nothing
+-- else return Just Tie or Just WinningSide side
 whoHasWon :: Game -> Maybe Winner
 whoHasWon (board, side, turn)
   | length kingList == 2 && turn /= 0 = Nothing
@@ -157,10 +152,16 @@ makeMove (board, side, turn) move@((startPos, movingPiece), toPos)
   | move `notElem` (pieceLegalMoves (startPos, movingPiece) board) = Nothing
   | otherwise =
       let updatedBoard = [(pos, piece) | (pos, piece) <- board, pos /= startPos, pos /= toPos]
-       in Just ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)
+       in case move of
+            (((_, 7), (Pawn, White)), (_, 8)) -> Just ((toPos, (Queen, White)) : updatedBoard, opponent side, turn - 1)
+            (((_, 2), (Pawn, Black)), (_, 1)) -> Just ((toPos, (Queen, Black)) : updatedBoard, opponent side, turn - 1)
+            _ -> Just ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)
 
 -- making a move without considering whether it is legal
 makeUnSafeMove :: Game -> Move -> Game
-makeUnSafeMove (board, side, turn) ((startPos, movingPiece), toPos) =
+makeUnSafeMove (board, side, turn) move@((startPos, movingPiece), toPos) =
   let updatedBoard = [(pos, piece) | (pos, piece) <- board, pos /= startPos, pos /= toPos]
-   in ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)
+   in case move of
+        (((_, 7), (Pawn, White)), (_, 8)) -> ((toPos, (Queen, White)) : updatedBoard, opponent side, turn - 1)
+        (((_, 2), (Pawn, Black)), (_, 1)) -> ((toPos, (Queen, Black)) : updatedBoard, opponent side, turn - 1)
+        _ -> ((toPos, movingPiece) : updatedBoard, opponent side, turn - 1)
