@@ -49,6 +49,9 @@ initialBoard =
          ((8, 8), (Rook, Black))
        ]
 
+initialGame :: Game
+initialGame = (initialBoard, White, 50)
+
 emptyBoard :: Board
 emptyBoard = []
 

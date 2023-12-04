@@ -50,20 +50,39 @@ bestMove game@(_, side, _) =
 
 -- TODO: Breadth first find best move maybe, so you can check mate in 1 instead of 5
 
-pieceValue :: PieceType -> Int
-pieceValue Pawn = 1
-pieceValue Bishop = 3
-pieceValue Knight = 3
-pieceValue Rook = 5
-pieceValue Queen = 9
-pieceValue King = 10000
+-- pieceValue :: PieceType -> Int
+-- pieceValue Pawn = 1
+-- pieceValue Bishop = 3
+-- pieceValue Knight = 3
+-- pieceValue Rook = 5
+-- pieceValue Queen = 9
+-- pieceValue King = 10000
+
+-- -- Optimized via folds
+-- -- TODO: edge cases if the position is winning / losing
+-- rateGame :: Game -> Rating -- check if the game is won and also tie! if so, give highest possible marks
+-- rateGame (board, side, int) =
+--   let (white, black) = foldr (\(_, (pieceType, side)) (white, black) -> if side == White then (white + pieceValue pieceType, black) else (white, black + pieceValue pieceType)) (0, 0) board
+--    in white - black
+
+typeValue :: PieceType -> Int
+typeValue Pawn = 1
+typeValue Bishop = 3
+typeValue Knight = 3
+typeValue Rook = 5
+typeValue Queen = 9
+typeValue King = 10000
+
+pieceValue (pieceType, White) = typeValue pieceType
+pieceValue (pieceType, Black) = -(typeValue pieceType)
 
 -- Optimized via folds
 -- TODO: edge cases if the position is winning / losing
-rateGame :: Game -> Rating -- check if the game is won and also tie! if so, give highest possible marks
+rateGame :: Game -> Rating
 rateGame (board, side, int) =
-  let (white, black) = foldr (\(_, (pieceType, side)) (white, black) -> if side == White then (white + pieceValue pieceType, black) else (white, black + pieceValue pieceType)) (0, 0) board
-   in white - black
+  foldr (\(_, piece) total -> total + pieceValue piece) 0 board
+
+-- foldr (\(_, (pieceType, side)) total -> if side == White then total + typeValue pieceType else total - typeValue pieceType) 0 board
 
 whoMightWin :: Game -> Int -> (Rating, Maybe Move)
 -- TODO turn error check so that we don't over analyze after turns are 0
