@@ -23,7 +23,7 @@ type Move = (Square, Pos) -- deriving (Show, Eq) FOR LATER **
 
 type Game = (Board, Side, Int)
 
-
+type Rating = Int
 
 --                                               BOARDS
 initialBoard :: Board

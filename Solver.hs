@@ -1,13 +1,13 @@
 module Solver where
 
 import Chess
-import Debug.Trace
 import Data.List
+import Debug.Trace
 
 allNextGame :: Game -> [Game]
 allNextGame game@(board, side, turn) =
   let allMoves = allLegalMoves game
-  in [makeUnSafeMove game move | move <- allMoves]
+   in [makeUnSafeMove game move | move <- allMoves]
 
 whoWillWin :: Game -> Winner
 whoWillWin game@(_, side, _) =
@@ -60,22 +60,22 @@ pieceValue King = 10000
 
 -- Optimized via folds
 -- TODO: edge cases if the position is winning / losing
-rateGame :: Game -> Int
-rateGame (board, side, int) = 
-    let (white, black) = foldr (\(_, (pieceType, side)) (white, black) -> if side == White then (white + pieceValue pieceType, black) else (white, black + pieceValue pieceType)) (0, 0) board
-      in white - black
+rateGame :: Game -> Rating -- check if the game is won and also tie! if so, give highest possible marks
+rateGame (board, side, int) =
+  let (white, black) = foldr (\(_, (pieceType, side)) (white, black) -> if side == White then (white + pieceValue pieceType, black) else (white, black + pieceValue pieceType)) (0, 0) board
+   in white - black
 
+whoMightWin :: Game -> Int -> (Rating, Maybe Move)
+-- TODO turn error check so that we don't over analyze after turns are 0
+whoMightWin game@(_, player, turn) remDepth
+  | remDepth == 0 || (whoHasWon game /= Nothing) = (rateGame game, Nothing)
+  | otherwise =
+      selectFor
+        player
+        [(fst (whoMightWin nextGame (remDepth - 1)), Just nextMove) | (nextGame, nextMove) <- gameMoveAssociation game]
 
-whoMightWin :: Game -> Int -> (Int, Move)
-
---TODO turn error check so that we don't over analyze after turns are 0
-whoMightWin (board, White, turn) remDepth
-  |remDepth == 1 = maximumBy (\(x1,_) (x2,_) -> compare x1 x2) [(rateGame nextGame, nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,White, turn)]
-  |remDepth > 1 = maximumBy (\(x1,_) (x2,_) -> compare x1 x2) [( fst (whoMightWin nextGame (remDepth-1)), nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,White, turn)]
-
-whoMightWin (board, Black, turn) remDepth
-  |remDepth == 1 = minimumBy (\(x1,_) (x2,_) -> compare x1 x2) [(rateGame nextGame, nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,Black, turn)]
-  |remDepth > 1 = minimumBy (\(x1,_) (x2,_) -> compare x1 x2) [( fst (whoMightWin nextGame (remDepth-1)), nextMove) | (nextGame, nextMove) <- gameMoveAssociation (board,Black, turn)]
+selectFor White = maximumBy (\(x1, _) (x2, _) -> compare x1 x2)
+selectFor Black = minimumBy (\(x1, _) (x2, _) -> compare x1 x2)
 
 {-
 minimax :: Int -> GameState -> Int
