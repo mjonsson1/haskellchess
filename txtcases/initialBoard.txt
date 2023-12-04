@@ -6,8 +6,4 @@ _ _ _ _ _ _ _ _
 _ _ _ _ _ _ _ _
 _ _ _ _ _ _ _ _
 P P P P P P P P
-<<<<<<< HEAD
 R N B Q K B N R
-=======
-R N R Q K B N R
->>>>>>> 1f377ed0eb9159b8327539d3caa5f86acf783176
