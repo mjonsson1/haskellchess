@@ -8,8 +8,6 @@ allNextGame game@(board, side, turn) =
   let allMoves = allLegalMoves game
   in [makeUnSafeMove game move | move <- allMoves]
 
-
-
 whoWillWin :: Game -> Winner
 whoWillWin game@(_, side, _) =
   case whoHasWon game of
@@ -23,6 +21,7 @@ whoWillWin game@(_, side, _) =
                 | (WinningSide side) `elem` winners = WinningSide side
                 | otherwise = Tie
           in bestWinner
+
 gameMoveAssociation :: Game -> [(Game, Move)]
 gameMoveAssociation game@(board, side, turn) =
   let allMoves = allLegalMoves game
@@ -39,10 +38,20 @@ bestMove game@(board, side, _) =
         Nothing -> snd (head outcomes)
         Just move -> move
 
-
-
 testBoard :: Board
 testBoard = [((8, 8), (King, White)), ((1, 1), (King, Black)), ((7, 2), (Rook, Black)), ((6, 1), (Rook, Black))]
-      
 
---TODO: Breadth first find best move maybe, so you can check mate in 1 instead of 5
+pieceValue :: PieceType -> Int
+pieceValue Pawn = 1
+pieceValue Bishop = 3
+pieceValue Knight = 3
+pieceValue Rook = 5
+pieceValue Queen = 9
+pieceValue King = 10000
+
+-- Optimized via folds
+-- TODO: edge cases if the position is winning / losing
+rateGame :: Game -> Int
+rateGame (board, side, int) = 
+    let (white, black) = foldr (\(_, (pieceType, side)) (white, black) -> if side == White then (white + pieceValue pieceType, black) else (white, black + pieceValue pieceType)) (0, 0) board
+      in white - black
