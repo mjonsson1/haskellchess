@@ -47,63 +47,94 @@ readMove line (board, side, turn) =
         -- if the input format is not two strings
         _ -> Nothing
 
-recurReadInput :: Game -> IO ()
-recurReadInput game = do
+recurReadInput :: Game -> Bool -> IO ()
+recurReadInput game isInteractive = do
   moveStr <- getLine
   case readMove moveStr game of
     Nothing -> do
       putStrLn "Invalid input. Please enter a valid input (in format: d2 d4): "
-      recurReadInput game
+      recurReadInput game isInteractive
     Just move@(((x, y), (pType, side)), (x1, y1)) ->
       case makeMove game move of
-        Just newBoard -> startTurn newBoard
+        Just gameAfterPlayerMove -> do 
+          if isInteractive then do
+            putStrLn $ showPrettyGame gameAfterPlayerMove
+            putStrLn "Calculating solver move..."
+            let gameAfterSolverMove = makeSolverMove gameAfterPlayerMove
+            startTurn gameAfterSolverMove isInteractive
+          else startTurn gameAfterPlayerMove isInteractive
         Nothing -> do
           putStrLn "This is not a valid move, try again: "
-          recurReadInput game
+          recurReadInput game isInteractive
 
 -- print the current turn's board and recursively ask for input
-startTurn :: Game -> IO ()
-startTurn game@(board, sideOfPlayer, turnNum) = do
+startTurn :: Game -> Bool -> IO ()
+startTurn game@(board, sideOfPlayer, turnNum) isInteractive = do
   putStrLn ""
   putStrLn $ showPrettyGame game
   case whoHasWon (board, sideOfPlayer, turnNum) of
     Nothing -> do
       putStrLn ("Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
-      recurReadInput (board, sideOfPlayer, turnNum)
+      recurReadInput (board, sideOfPlayer, turnNum) isInteractive
     Just end -> case end of
       WinningSide side -> putStrLn (show side ++ " is the winner!")
       Tie -> putStrLn "It's a tie!"
 
 
+determineDynamicDepth :: Game -> Int
+determineDynamicDepth game = 
+  case (length (gameMoveAssociation game)) of
+    n | n < 10 -> 6
+    n | n >= 10 && n < 20 -> 5
+    n | n >= 20 && n < 30 -> 4
+    n | n > 30 -> 3
+
+
+makeSolverMove :: Game -> Game
+makeSolverMove game = 
+  let (rating, move) = whoMightWin game (determineDynamicDepth game)
+  in case move of 
+    Just solver_move -> 
+      let newGame = makeMove game solver_move
+      in case newGame of 
+        Just newGame1 -> newGame1
+        Nothing -> error "Generated solver move but could not make it on the board."
+    Nothing -> error "Could not generate best move."
+
+
 -- TODO FIX FLAGS
 
-data Flag = Help | Quick | Number String | Start String | TwoPlayer deriving (Eq, Show)
-options :: [OptDescr  Flag]
-options = [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
-            Option ['w'] ["winner"] (ReqArg) "Print out winning move with absolute solver."
-            ,Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
-                {- "Start at fortune <num>. Defaults to value based on name, or 1 if quick mode." -}
-          ]
+-- data Flag = Help | Quick | Number String | Start String | TwoPlayer deriving (Eq, Show)
+-- options :: [OptDescr  Flag]
+-- options = [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
+--             Option ['w'] ["winner"] (ReqArg) "Print out winning move with absolute solver."
+--             ,Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
+--                 {- "Start at fortune <num>. Defaults to value based on name, or 1 if quick mode." -}
+--           ]
 
 
-main :: IO ()
-main = 
-  do args <- getArgs
-     let (flags, inputs, errors) =  getOpt Permute options args
-     let fname = if null inputs then "./txtcases/initialBoard.txt" else head inputs
-     game@(_, _, _) <- loadGame fname
-     if Help `elem` flags
-       then putStrLn $ usageInfo "Fortunes [options] [file]" options
-       else
-          if TwoPlayer `elem` flags
-          then
-              startTwoPlayer game
-            else
-              error "Not a valid Flag"
+-- main :: IO ()
+-- main = 
+--   do args <- getArgs
+--      let (flags, inputs, errors) =  getOpt Permute options args
+--      let fname = if null inputs then "./txtcases/initialBoard.txt" else head inputs
+--      game@(_, _, _) <- loadGame fname
+--      if Help `elem` flags
+--        then putStrLn $ usageInfo "Fortunes [options] [file]" options
+--        else
+--           if TwoPlayer `elem` flags
+--           then
+--               startTwoPlayer game
+--             else
+--               error "Not a valid Flag"
 
 
 startTwoPlayer :: Game -> IO ()
-startTwoPlayer game = startTurn game
+startTwoPlayer game = startTurn game False
+
+startInteractiveMode :: Game -> IO ()
+startInteractiveMode game = startTurn game True
+
 -- This main function just runs a two player game from the start
 {-
 main :: IO ()
@@ -137,7 +168,7 @@ main = do
 -}
 
 -- This  main allows you to feed a tester board game state to check AI behavior
-{-
+
 main :: IO ()
 main =
   do
@@ -147,7 +178,7 @@ main =
     putStrLn "Initial board: "
     putStrLn $ showPrettyGame game
     putBestMove game
--}
+
 {-
 main :: IO ()
 main = 
