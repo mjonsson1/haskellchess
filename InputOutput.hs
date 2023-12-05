@@ -59,7 +59,20 @@ showPrettyMove move =
             Just x -> x
             Nothing -> error "invalid move"
           end = endx ++ show y2
-       in show side ++ " " ++ show pType ++ ": " ++ start ++ " -> " ++ end
+       in "You should make the move " ++ show side ++ " " ++ show pType ++ ": " ++ start ++ " -> " ++ end
+
+showPrettyMove2 :: Move -> String
+showPrettyMove2 (((x1, y1), (pType, side)), (x2, y2)) =
+      let coorAssociation = zip [1 .. 8] ["a", "b", "c", "d", "e", "f", "g", "h"]
+          startx = case lookup x1 coorAssociation of
+            Just x -> x
+            Nothing -> error "invalid move"
+          start = startx ++ show y1
+          endx = case lookup x2 coorAssociation of
+            Just x -> x
+            Nothing -> error "invalid move"
+          end = endx ++ show y2
+       in "You should make the move " ++ show side ++ " " ++ show pType ++ ": " ++ start ++ " -> " ++ end
 
 --                                        TEXT REPRESENTATION
 --                                           GAME TO FEN
@@ -167,4 +180,14 @@ putBestMove game = do
   let bm = bestMove game
       newGame = makeUnSafeMove game bm
   putStrLn $ "You should make move: " ++ show bm
+
+
+putBestMoveVerbose :: Game -> IO ()
+putBestMoveVerbose game = do
+  let bm = bestMove game
+      newGame = makeUnSafeMove game bm
+  putStrLn "Initial board: "
+  putStrLn $ showPrettyGame game
+  putStrLn $ "You should make move: " ++ show bm
+  putStrLn "Board after "
   putStrLn $ showPrettyGame newGame
