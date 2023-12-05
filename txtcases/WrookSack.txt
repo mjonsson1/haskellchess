@@ -1,0 +1,9 @@
+W 10
+r n b _ _ _ n r
+p p _ k _ B p p
+_ _ p p _ _ _ _
+_ _ b _ _ _ _ _
+_ _ _ _ P B _ _
+_ _ _ P _ Q _ _
+P q P _ N _ P P
+R N _ _ K _ _ R
