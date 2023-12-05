@@ -47,114 +47,112 @@ readMove line (board, side, turn) =
         -- if the input format is not two strings
         _ -> Nothing
 
-recurReadInput :: Game -> IO ()
-recurReadInput game = do
+recurReadInput :: Game -> Bool -> IO ()
+recurReadInput game isInteractive = do
   moveStr <- getLine
   case readMove moveStr game of
     Nothing -> do
       putStrLn "Invalid input. Please enter a valid input (in format: d2 d4): "
-      recurReadInput game
+      recurReadInput game isInteractive
     Just move@(((x, y), (pType, side)), (x1, y1)) ->
       case makeMove game move of
-        Just newBoard -> startTurn newBoard
+        Just gameAfterPlayerMove -> do 
+          if isInteractive then do
+            putStrLn $ showPrettyGame gameAfterPlayerMove
+            putStrLn "Calculating solver move..."
+            let gameAfterSolverMove = makeSolverMove gameAfterPlayerMove
+            startTurn gameAfterSolverMove isInteractive
+          else startTurn gameAfterPlayerMove isInteractive
         Nothing -> do
           putStrLn "This is not a valid move, try again: "
-          recurReadInput game
+          recurReadInput game isInteractive
 
 -- print the current turn's board and recursively ask for input
-startTurn :: Game -> IO ()
-startTurn game@(board, sideOfPlayer, turnNum) = do
+startTurn :: Game -> Bool -> IO ()
+startTurn game@(board, sideOfPlayer, turnNum) isInteractive = do
   putStrLn ""
   putStrLn $ showPrettyGame game
   case whoHasWon (board, sideOfPlayer, turnNum) of
     Nothing -> do
       putStrLn ("Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
-      recurReadInput (board, sideOfPlayer, turnNum)
+      recurReadInput (board, sideOfPlayer, turnNum) isInteractive
     Just end -> case end of
       WinningSide side -> putStrLn (show side ++ " is the winner!")
       Tie -> putStrLn "It's a tie!"
 
 
--- TODO FIX FLAGS
+determineDynamicDepth :: Game -> Int
+determineDynamicDepth game = 
+  case (length (gameMoveAssociation game)) of
+    n | n < 10 -> 6
+    n | n >= 10 && n < 20 -> 5
+    n | n >= 20 && n < 30 -> 4
+    n | n > 30 -> 4
 
-data Flag = Help | Quick | Number String | Start String | TwoPlayer deriving (Eq, Show)
-options :: [OptDescr  Flag]
-options = [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
-            Option ['w'] ["winner"] (ReqArg) "Print out winning move with absolute solver."
-            ,Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
-                {- "Start at fortune <num>. Defaults to value based on name, or 1 if quick mode." -}
-          ]
 
+makeSolverMove :: Game -> Game
+makeSolverMove game = 
+  let (rating, move) = moveEstimate game (determineDynamicDepth game)
+  in case move of 
+    Just solver_move -> 
+      let newGame = makeMove game solver_move
+      in case newGame of 
+        Just newGame1 -> newGame1
+        Nothing -> error "Generated solver move but could not make it on the board."
+    Nothing -> error "Could not generate best move."
+
+
+data Flag = Help | Winner | Depth Int | TwoPlayer | Verbose | Estimate | Interactive deriving (Eq, Show)
+
+options :: [OptDescr Flag]
+options =
+  [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
+  , Option ['v'] ["verbose"] (NoArg Verbose) "Prints out a visual representation of the information as well as vital information on the quality of the move and the state of the game."
+  , Option ['w'] ["winner"] (NoArg Winner) "Print out winning move with absolute solver."
+  , Option ['d'] ["depth"] (ReqArg (\num -> Depth (read num)) "<num>") "Add a specific depth parameter to AI Estimate solver. Defaults to 5."
+  , Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
+  , Option ['e'] ["estimate"] (NoArg Estimate) "Estimate solver, runs at default depth of 5, can be adjusted using the depth flag."
+  , Option ['i'] ["interactive"] (NoArg Interactive) "Interactive play with AI."
+  ]
 
 main :: IO ()
-main = 
-  do args <- getArgs
-     let (flags, inputs, errors) =  getOpt Permute options args
-     let fname = if null inputs then "./txtcases/initialBoard.txt" else head inputs
-     game@(_, _, _) <- loadGame fname
-     if Help `elem` flags
-       then putStrLn $ usageInfo "Fortunes [options] [file]" options
-       else
-          if TwoPlayer `elem` flags
-          then
-              startTwoPlayer game
+main = do
+  args <- getArgs
+  let (flags, inputs, errors) = getOpt Permute options args
+  let fname = if null inputs then "./txtcases/initialBoard.txt" else head inputs
+  game@(_, _, _) <- loadGame fname
+  if Help `elem` flags
+    then putStrLn $ usageInfo "Chess [options] [file]" options
+    else if TwoPlayer `elem` flags
+      then startTwoPlayer game
+      else if Interactive `elem` flags
+            then startInteractiveMode game
             else
-              error "Not a valid Flag"
+              processFlags flags game
+
+
+processFlags :: [Flag] -> Game -> IO ()
+processFlags flags game =
+  case getDepthFromFlags flags of
+    Just depth ->
+      if Winner `elem` flags
+        then error "Depth flag cannot be combined with winner flag"
+        else if Estimate `elem` flags
+               then putStrLn $ showPrettyMove (snd (moveEstimate game depth))
+               else error "Need to include Estimate in flags in order to output a move"
+    Nothing ->
+      putStrLn $ showPrettyMove (snd (moveEstimate game 5))
+
+getDepthFromFlags :: [Flag] -> Maybe Int
+getDepthFromFlags [] = Nothing
+getDepthFromFlags (Depth depth : _) = Just depth
+getDepthFromFlags (_ : rest) = getDepthFromFlags rest
 
 
 startTwoPlayer :: Game -> IO ()
-startTwoPlayer game = startTurn game
--- This main function just runs a two player game from the start
-{-
-main :: IO ()
-main = do
-  startTurn (initialBoard, White, 30)
--}
+startTwoPlayer game = startTurn game False
 
--- This main allows you to load in specific tester case boards to play in 2 player format
-{-
-main :: IO ()
-main =
-  do
-    args <- getArgs
-    let fname = head args
-    game@(initialboard, _, _) <- loadGame fname
-    startTurn game
--}
--- This main allows you to print all next game states
-{-
-printAllBoard :: [Board] -> IO ()
-printAllBoard [b] = do putStrLn $ showBoard b
-printAllBoard (b : bs) = do
-  putStrLn $ showBoard b
-  printAllBoard bs
+startInteractiveMode :: Game -> IO ()
+startInteractiveMode game = startTurn game True
 
-main :: IO ()
-main = do
-  let newGames = allNextGame (initialBoard, White, 50)
-  let allBoards = [board | (board, _, _) <- newGames]
-  printAllBoard allBoards
--}
 
--- This  main allows you to feed a tester board game state to check AI behavior
-{-
-main :: IO ()
-main =
-  do
-    args <- getArgs
-    let fname = head args
-    game <- loadGame fname
-    putStrLn "Initial board: "
-    putStrLn $ showPrettyGame game
-    putBestMove game
--}
-{-
-main :: IO ()
-main = 
-    do
-      args <- getArgs
-      let fname = head args
-      game <- loadGame fname
-      putStrLn $ show (whoMightWin game 5)
-
--}
