@@ -8,7 +8,7 @@ import Debug.Trace
 import Solver
 import System.IO
 
---                                        SHOWING BOARD FOR PRETTY PRINTING
+--                                        PRETTY PRINTING
 
 showPiecePretty :: Piece -> String
 showPiecePretty (Rook, Black) = " ♖ "
@@ -44,6 +44,22 @@ showPrettyGame (board, side, turn) =
       coordinateLine = intercalate "   " ["", "a", "b", "c", "d", "e", "f", "g", "h"]
       prettyBoard = unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
    in "Current side: " ++ (show side) ++ "\n" ++ "Num of turn left: " ++ (show turn) ++ "\n" ++ prettyBoard
+
+showPrettyMove :: Maybe Move -> String
+showPrettyMove move =
+  case move of
+    Nothing -> "no move"
+    Just (((x1, y1), (pType, side)), (x2, y2)) ->
+      let coorAssociation = zip [1 .. 8] ["a", "b", "c", "d", "e", "f", "g", "h"]
+          startx = case lookup x1 coorAssociation of
+            Just x -> x
+            Nothing -> error "invalid move"
+          start = startx ++ show y1
+          endx = case lookup x2 coorAssociation of
+            Just x -> x
+            Nothing -> error "invalid move"
+          end = endx ++ show y2
+       in show side ++ " " ++ show pType ++ ": " ++ start ++ " -> " ++ end
 
 --                                        TEXT REPRESENTATION
 --                                           GAME TO FEN
