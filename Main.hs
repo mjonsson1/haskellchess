@@ -77,33 +77,62 @@ startTurn game@(board, sideOfPlayer, turnNum) = do
 
 -- TODO FIX FLAGS
 
-data Flag = Help | Quick | Number String | Start String | TwoPlayer deriving (Eq, Show)
-options :: [OptDescr  Flag]
-options = [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
-            Option ['w'] ["winner"] (ReqArg) "Print out winning move with absolute solver."
-            ,Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
-                {- "Start at fortune <num>. Defaults to value based on name, or 1 if quick mode." -}
-          ]
 
+
+data Flag = Help | Winner | Depth Int | TwoPlayer | Verbose | Estimate deriving (Eq, Show)
+
+options :: [OptDescr Flag]
+options =
+  [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
+  , Option ['v'] ["verbose"] (NoArg Verbose) "Prints out a visual representation of the information as well as vital information on the quality of the move and the state of the game."
+  , Option ['w'] ["winner"] (NoArg Winner) "Print out winning move with absolute solver."
+  , Option ['d'] ["depth"] (ReqArg (\num -> Depth (read num)) "<num>") "Add a specific depth parameter to AI Estimate solver. Defaults to 5."
+  , Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
+  , Option ['e'] ["estimate"] (NoArg Estimate) "Estimate solver, runs at default depth of 5, can be adjusted using the depth flag."
+  ]
 
 main :: IO ()
-main = 
-  do args <- getArgs
-     let (flags, inputs, errors) =  getOpt Permute options args
-     let fname = if null inputs then "./txtcases/initialBoard.txt" else head inputs
-     game@(_, _, _) <- loadGame fname
-     if Help `elem` flags
-       then putStrLn $ usageInfo "Fortunes [options] [file]" options
-       else
-          if TwoPlayer `elem` flags
-          then
-              startTwoPlayer game
-            else
-              error "Not a valid Flag"
+main = do
+  args <- getArgs
+  let (flags, inputs, errors) = getOpt Permute options args
+  let fname = if null inputs then "./txtcases/initialBoard.txt" else head inputs
+  game@(_, _, _) <- loadGame fname
+  if Help `elem` flags
+    then putStrLn $ usageInfo "Chess [options] [file]" options
+    else if TwoPlayer `elem` flags
+      then startTwoPlayer game
+      elsese
+      processFlags flags game
+
+
+processFlags :: [Flag] -> Game -> IO ()
+processFlags flags game =
+  case getDepthFromFlags flags of
+    Just depth ->
+      if Winner `elem` flags
+        then error "Depth flag cannot be combined with winner flag"
+        else if Estimate `elem` flags
+               then putStrLn $ showPrettyMove (snd (moveEstimate game depth))
+               else error "Need to include Estimate in flags in order to output a move"
+    Nothing ->
+      putStrLn $ showPrettyMove (snd (moveEstimate game 5))
+
+getDepthFromFlags :: [Flag] -> Maybe Int
+getDepthFromFlags [] = Nothing
+getDepthFromFlags (Depth depth : _) = Just depth
+getDepthFromFlags (_ : rest) = getDepthFromFlags rest
+
+--putStrLn $ showPrettyMove2 (bestMove game) for winner
+                {-if TwoPlayer `elem` flags
+                then
+                    
+                  else
+                    error "Not a valid Flag"-}
 
 
 startTwoPlayer :: Game -> IO ()
 startTwoPlayer game = startTurn game
+
 -- This main function just runs a two player game from the start
 {-
 main :: IO ()
@@ -144,8 +173,8 @@ main =
     args <- getArgs
     let fname = head args
     game <- loadGame fname
-    putStrLn "Initial board: "
-    putStrLn $ showPrettyGame game
+    --putStrLn "Initial board: "
+    --putStrLn $ showPrettyGame game
     putBestMove game
 -}
 {-

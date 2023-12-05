@@ -69,17 +69,17 @@ typeValue King = 10000
 pieceValue (pieceType, White) = typeValue pieceType
 pieceValue (pieceType, Black) = -(typeValue pieceType)
 
--- Optimized via folds
+-- Optimized via foldsshow
 -- TODO: edge cases if the position is winning / losing
 rateGame :: Game -> Rating
 rateGame (board, side, int) =
   foldr (\(_, piece) total -> total + pieceValue piece) 0 board
 
-whoMightWin :: Game -> Int -> (Rating, Maybe Move)
-whoMightWin game@(_, player, turn) remDepth
+moveEstimate :: Game -> Int -> (Rating, Maybe Move)
+moveEstimate game@(_, player, turn) remDepth
   | remDepth == 0 || isJust (whoHasWon game) = (rateGame game, Nothing)
   | otherwise =
-      let ratingMoveAssociation = [(fst (whoMightWin nextGame (remDepth - 1)), Just nextMove) | (nextGame, nextMove) <- gameMoveAssociation game]
+      let ratingMoveAssociation = [(fst (moveEstimate nextGame (remDepth - 1)), Just nextMove) | (nextGame, nextMove) <- gameMoveAssociation game]
        in selectFor player ratingMoveAssociation
 
 selectFor :: Side -> [(Rating, Maybe Move)] -> (Rating, Maybe Move)
