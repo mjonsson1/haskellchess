@@ -87,7 +87,7 @@ determineDynamicDepth game =
     n | n < 10 -> 6
     n | n >= 10 && n < 20 -> 5
     n | n >= 20 && n < 30 -> 4
-    n | n > 30 -> 3
+    n | n > 30 -> 4
 
 
 makeSolverMove :: Game -> Game
@@ -172,12 +172,12 @@ main = do
 main :: IO ()
 main =
   do
-    args <- getArgs
-    let fname = head args
-    game <- loadGame fname
+    -- args <- getArgs
+    -- let fname = head args
+    game <- loadGame "./txtcases/initialBoard.txt"
     putStrLn "Initial board: "
     putStrLn $ showPrettyGame game
-    putBestMove game
+    startInteractiveMode game
 
 {-
 main :: IO ()
