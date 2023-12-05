@@ -92,7 +92,7 @@ determineDynamicDepth game =
 
 makeSolverMove :: Game -> Game
 makeSolverMove game = 
-  let (rating, move) = whoMightWin game (determineDynamicDepth game)
+  let (rating, move) = moveEstimate game (determineDynamicDepth game)
   in case move of 
     Just solver_move -> 
       let newGame = makeMove game solver_move
@@ -102,7 +102,7 @@ makeSolverMove game =
     Nothing -> error "Could not generate best move."
 
 
-data Flag = Help | Winner | Depth Int | TwoPlayer | Verbose | Estimate deriving (Eq, Show)
+data Flag = Help | Winner | Depth Int | TwoPlayer | Verbose | Estimate | Interactive deriving (Eq, Show)
 
 options :: [OptDescr Flag]
 options =
@@ -112,6 +112,7 @@ options =
   , Option ['d'] ["depth"] (ReqArg (\num -> Depth (read num)) "<num>") "Add a specific depth parameter to AI Estimate solver. Defaults to 5."
   , Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
   , Option ['e'] ["estimate"] (NoArg Estimate) "Estimate solver, runs at default depth of 5, can be adjusted using the depth flag."
+  , Option ['i'] ["interactive"] (NoArg Interactive) "Interactive play with AI."
   ]
 
 main :: IO ()
@@ -123,9 +124,11 @@ main = do
   if Help `elem` flags
     then putStrLn $ usageInfo "Chess [options] [file]" options
     else if TwoPlayer `elem` flags
-      then startTwoPlayer game False
-      elsese
-      processFlags flags game
+      then startTwoPlayer game
+      else if Interactive `elem` flags
+            then startInteractiveMode game
+            else
+              processFlags flags game
 
 
 processFlags :: [Flag] -> Game -> IO ()
@@ -153,66 +156,3 @@ startInteractiveMode :: Game -> IO ()
 startInteractiveMode game = startTurn game True
 
 
--- This main function just runs a two player game from the start
-{-
-main :: IO ()
-main = do
-  startTurn (initialBoard, White, 30)
--}
-
--- This main allows you to load in specific tester case boards to play in 2 player format
-{-
-main :: IO ()
-main =
-  do
-    args <- getArgs
-    let fname = head args
-    game@(initialboard, _, _) <- loadGame fname
-    startTurn game
--}
--- This main allows you to print all next game states
-{-
-printAllBoard :: [Board] -> IO ()
-printAllBoard [b] = do putStrLn $ showBoard b
-printAllBoard (b : bs) = do
-  putStrLn $ showBoard b
-  printAllBoard bs
-
-main :: IO ()
-main = do
-  let newGames = allNextGame (initialBoard, White, 50)
-  let allBoards = [board | (board, _, _) <- newGames]
-  printAllBoard allBoards
--}
-
--- This  main allows you to feed a tester board game state to check AI behavior
-{-
-main :: IO ()
-main =
-  do
-    args <- getArgs
-    let fname = head args
-    game <- loadGame fname
-    --putStrLn "Initial board: "
-    --putStrLn $ showPrettyGame game
-    putBestMove game
-
-
-    -- args <- getArgs
-    -- let fname = head args
-    game <- loadGame "./txtcases/initialBoard.txt"
-    putStrLn "Initial board: "
-    putStrLn $ showPrettyGame game
-    startInteractiveMode game
--}
-
-{-
-main :: IO ()
-main = 
-    do
-      args <- getArgs
-      let fname = head args
-      game <- loadGame fname
-      putStrLn $ show (whoMightWin game 5)
-
--}
