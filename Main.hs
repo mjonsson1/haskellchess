@@ -5,7 +5,7 @@ import InputOutput
 import Solver
 import System.Environment
 import System.Console.GetOpt
-
+import Text.Read
 toLowerString :: String -> String
 toLowerString = map toLower
 
@@ -102,16 +102,16 @@ makeSolverMove game =
     Nothing -> error "Could not generate best move."
 
 
-data Flag = Help | Winner | Depth Int | TwoPlayer | Verbose | Estimate | Interactive deriving (Eq, Show)
+data Flag = Help | Winner | Depth (Maybe Int) | TwoPlayer | Verbose | Move String | Interactive deriving (Eq, Show)
 
 options :: [OptDescr Flag]
 options =
   [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
   , Option ['v'] ["verbose"] (NoArg Verbose) "Prints out a visual representation of the information as well as vital information on the quality of the move and the state of the game."
   , Option ['w'] ["winner"] (NoArg Winner) "Print out winning move with absolute solver."
-  , Option ['d'] ["depth"] (ReqArg (\num -> Depth (read num)) "<num>") "Add a specific depth parameter to AI Estimate solver. Defaults to 5."
-  , Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
-  , Option ['e'] ["estimate"] (NoArg Estimate) "Estimate solver, runs at default depth of 5, can be adjusted using the depth flag."
+  , Option ['d'] ["depth"] (ReqArg (\num -> Depth (readMaybe num)) "<num>") "Add a specific depth parameter to AI Estimate solver. Defaults to 4."
+  , Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game locally."
+  --, Option ['m'] ["move"] (ReqArg Move (\move -> Move (readMove move))  "<move>") "Input a move in format ((x1,y1), (Side Piece)(x2,y2)) and print out the result"
   , Option ['i'] ["interactive"] (NoArg Interactive) "Interactive play with AI."
   ]
 
@@ -128,24 +128,29 @@ main = do
       else if Interactive `elem` flags
             then startInteractiveMode game
             else
-              processFlags flags game
+              processFlags game flags
 
 
-processFlags :: [Flag] -> Game -> IO ()
-processFlags flags game =
-  case getDepthFromFlags flags of
-    Just depth ->
-      if Winner `elem` flags
-        then error "Depth flag cannot be combined with winner flag"
-        else if Estimate `elem` flags
-               then putStrLn $ showPrettyMove (snd (moveEstimate game depth))
-               else error "Need to include Estimate in flags in order to output a move"
-    Nothing ->
-      putStrLn $ showPrettyMove (snd (moveEstimate game 5))
+processFlags :: Game -> [Flag] -> IO ()
+processFlags game flags
+  | Winner `elem` flags = putPerfectMove game flags
+{- | Move `elem` flags = putMoveResult game flags-}
+  | otherwise = putGoodMove game flags
+
+putPerfectMove :: Game -> [Flag] -> IO ()
+putPerfectMove game flags =
+    case getDepthFromFlags flags of
+        Nothing -> error "Depth flag cannot be combined with the Winner flag"
+        Just depth -> putStrLn $ showPrettyMove2 (bestMove game) 
+putGoodMove :: Game -> [Flag] -> IO ()
+putGoodMove game flags =
+    case getDepthFromFlags flags of
+        Nothing -> error "Invalid depth input"
+        Just depth -> putStrLn $ showPrettyMove (snd (moveEstimate game depth))
 
 getDepthFromFlags :: [Flag] -> Maybe Int
-getDepthFromFlags [] = Nothing
-getDepthFromFlags (Depth depth : _) = Just depth
+getDepthFromFlags [] = Just 5
+getDepthFromFlags (Depth depth : _) = depth
 getDepthFromFlags (_ : rest) = getDepthFromFlags rest
 
 
