@@ -5,7 +5,7 @@ import InputOutput
 import Solver
 import System.Environment
 import System.Console.GetOpt
-
+import Text.Read
 toLowerString :: String -> String
 toLowerString = map toLower
 
@@ -47,6 +47,7 @@ readMove line (board, side, turn) =
         -- if the input format is not two strings
         _ -> Nothing
 
+
 recurReadInput :: Game -> Bool -> IO ()
 recurReadInput game isInteractive = do
   moveStr <- getLine
@@ -87,7 +88,7 @@ determineDynamicDepth game =
     n | n < 10 -> 6
     n | n >= 10 && n < 20 -> 5
     n | n >= 20 && n < 30 -> 4
-    n | n > 30 -> 4
+    n | n >= 30 -> 4
 
 
 makeSolverMove :: Game -> Game
@@ -102,16 +103,16 @@ makeSolverMove game =
     Nothing -> error "Could not generate best move."
 
 
-data Flag = Help | Winner | Depth Int | TwoPlayer | Verbose | Estimate | Interactive deriving (Eq, Show)
+data Flag = Help | Winner | Depth (Maybe Int) | TwoPlayer | Verbose | MoveInput String | Interactive deriving (Eq, Show)
 
 options :: [OptDescr Flag]
 options =
   [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
-  , Option ['v'] ["verbose"] (NoArg Verbose) "Prints out a visual representation of the information as well as vital information on the quality of the move and the state of the game."
+  , Option ['v'] ["verbose"] (NoArg Verbose) "Prints out a visual representation of the information as well as a rating for the game."
   , Option ['w'] ["winner"] (NoArg Winner) "Print out winning move with absolute solver."
-  , Option ['d'] ["depth"] (ReqArg (\num -> Depth (read num)) "<num>") "Add a specific depth parameter to AI Estimate solver. Defaults to 5."
-  , Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game."
-  , Option ['e'] ["estimate"] (NoArg Estimate) "Estimate solver, runs at default depth of 5, can be adjusted using the depth flag."
+  , Option ['d'] ["depth"] (ReqArg (\num -> Depth (readMaybe num)) "<num>") "Add a specific depth parameter to AI Estimate solver. Defaults to 4."
+  , Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game locally."
+  , Option ['m'] ["move"] (ReqArg MoveInput "move") "Input a move in <d2 d4> and print out the result "
   , Option ['i'] ["interactive"] (NoArg Interactive) "Interactive play with AI."
   ]
 
@@ -128,24 +129,96 @@ main = do
       else if Interactive `elem` flags
             then startInteractiveMode game
             else
-              processFlags flags game
+              if Verbose `elem` flags
+                then processFlagsVerbose game flags
+                else
+                  processFlags game flags
 
 
-processFlags :: [Flag] -> Game -> IO ()
-processFlags flags game =
-  case getDepthFromFlags flags of
-    Just depth ->
-      if Winner `elem` flags
-        then error "Depth flag cannot be combined with winner flag"
-        else if Estimate `elem` flags
-               then putStrLn $ showPrettyMove (snd (moveEstimate game depth))
-               else error "Need to include Estimate in flags in order to output a move"
-    Nothing ->
-      putStrLn $ showPrettyMove (snd (moveEstimate game 5))
+processFlags :: Game -> [Flag] -> IO ()
+processFlags game flags
+  | Winner `elem` flags = putPerfectMove game flags
+  | any isMoveInput flags = handleMoveInput game flags
+  | otherwise = putGoodMove game flags
+
+processFlagsVerbose:: Game -> [Flag] -> IO()
+processFlagsVerbose game flags
+  | Winner `elem` flags = putPerfectMoveVerbose game flags
+  | any isMoveInput flags = handleMoveInputVerbose game flags
+  | otherwise = putGoodMoveVerbose game flags
+
+isMoveInput :: Flag -> Bool
+isMoveInput (MoveInput _) = True
+isMoveInput _ = False
+
+
+handleMoveInput :: Game -> [Flag] -> IO ()
+handleMoveInput _ [] = putStrLn "No move input provided."
+handleMoveInput game (MoveInput moveStr : rest) = do
+    putStrLn $ "Received move input: " ++ moveStr
+    case readMove moveStr game of
+        Just move -> do
+            let newGame = makeUnSafeMove game move
+            putStrLn $ "Parsed move: " ++ show move
+            putStrLn "Board after:"
+            putStrLn $ showPrettyGame newGame
+        Nothing   -> putStrLn "Invalid move input."
+    -- Continue processing other flags in 'rest' if necessary
+handleMoveInput game (_ : rest) = handleMoveInput game rest -- Skip other flag types
+
+handleMoveInputVerbose :: Game -> [Flag] -> IO ()
+handleMoveInputVerbose _ [] = putStrLn "No move input provided."
+handleMoveInputVerbose game (MoveInput moveStr : rest) = do
+    putStrLn $ "Received move input: " ++ moveStr
+    case readMove moveStr game of
+        Just move -> do
+            let newGame = makeUnSafeMove game move
+            putStrLn $ "Parsed move: " ++ show move
+            putStrLn "Board after:"
+            putStrLn $ showPrettyGame newGame
+            putStrLn $ "Board rating in current state: " ++ show (rateGame newGame) ++ if (rateGame newGame > 0) then ". White is probably winning." else if (rateGame newGame < 0) then ". Black is probably winning." else ". The game is very close!"
+        Nothing   -> putStrLn "Invalid move input."
+    -- Continue processing other flags in 'rest' if necessary
+handleMoveInputVerbose game (_ : rest) = handleMoveInput game rest -- Skip other flag types
+
+putPerfectMove :: Game -> [Flag] -> IO ()
+putPerfectMove game flags =
+    case getDepthFromFlags flags of
+        Nothing -> error "Depth flag cannot be combined with the Winner flag"
+        Just depth ->  putBestMove game
+
+putPerfectMoveVerbose :: Game -> [Flag] -> IO ()
+putPerfectMoveVerbose game flags =
+    case getDepthFromFlags flags of
+        Nothing -> error "Depth flag cannot be combined with the Winner flag"
+        Just depth ->  putBestMoveVerbose game
+
+putGoodMove :: Game -> [Flag] -> IO ()
+putGoodMove game flags =
+    case getDepthFromFlags flags of
+        Nothing -> error "Invalid depth input"
+        Just depth -> putStrLn $ showPrettyMove (snd (moveEstimate game depth))
+
+putGoodMoveVerbose :: Game -> [Flag] -> IO ()
+putGoodMoveVerbose game flags =
+    case getDepthFromFlags flags of
+        Nothing -> error "Invalid depth input"
+        Just depth -> do
+            let maybeMove = snd (moveEstimate game depth)
+            case maybeMove of
+                Nothing -> error "Failed to estimate move"
+                Just em -> do
+                    putStrLn $ showPrettyMove2 em
+                    let newGame = makeUnSafeMove game em
+                    putStrLn "Initial board: "
+                    putStrLn $ showPrettyGame game
+                    putStrLn "Board after "
+                    putStrLn $ showPrettyGame newGame
+                    putStrLn $ "Board rating in current state: " ++ show (rateGame newGame) ++ if (rateGame newGame > 0) then ". White is probably winning." else if (rateGame newGame < 0) then ". Black is probably winning." else ". The game is very close!"
 
 getDepthFromFlags :: [Flag] -> Maybe Int
-getDepthFromFlags [] = Nothing
-getDepthFromFlags (Depth depth : _) = Just depth
+getDepthFromFlags [] = Just 5
+getDepthFromFlags (Depth depth : _) = depth
 getDepthFromFlags (_ : rest) = getDepthFromFlags rest
 
 
