@@ -43,7 +43,7 @@ showPrettyGame (board, side, turn) =
       separator = "   " ++ replicate (31) '-'
       coordinateLine = intercalate "   " ["", "a", "b", "c", "d", "e", "f", "g", "h"]
       prettyBoard = unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
-   in "Current side: " ++ (show side) ++ "\n" ++ "Num of turn left: " ++ (show turn) ++ "\n" ++ prettyBoard
+   in "Current side: " ++ (show side) ++ "\n" ++ "Number of turns left: " ++ (show turn) ++ "\n" ++ prettyBoard
 
 showPrettyMove :: Maybe Move -> String
 showPrettyMove move =
@@ -179,7 +179,7 @@ putBestMove :: Game -> IO ()
 putBestMove game = do
   let bm = bestMove game
       newGame = makeUnSafeMove game bm
-  putStrLn $ "You should make move: " ++ show bm
+  putStrLn $ "You should make the move: " ++ show bm
 
 
 putBestMoveVerbose :: Game -> IO ()
@@ -188,6 +188,7 @@ putBestMoveVerbose game = do
       newGame = makeUnSafeMove game bm
   putStrLn "Initial board: "
   putStrLn $ showPrettyGame game
-  putStrLn $ "You should make move: " ++ show bm
+  putStrLn $ "You should make the move: " ++ show bm
   putStrLn "Board after "
   putStrLn $ showPrettyGame newGame
+  putStrLn $ "Board rating in current state: " ++ show (rateGame newGame)
