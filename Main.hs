@@ -108,7 +108,7 @@ data Flag = Help | Winner | Depth (Maybe Int) | TwoPlayer | Verbose | MoveInput 
 options :: [OptDescr Flag]
 options =
   [ Option ['h'] ["help"] (NoArg Help) "Print usage information and exit."
-  , Option ['v'] ["verbose"] (NoArg Verbose) "Prints out a visual representation of the information as well as vital information on the quality of the move and the state of the game."
+  , Option ['v'] ["verbose"] (NoArg Verbose) "Prints out a visual representation of the information as well as a rating for the game."
   , Option ['w'] ["winner"] (NoArg Winner) "Print out winning move with absolute solver."
   , Option ['d'] ["depth"] (ReqArg (\num -> Depth (readMaybe num)) "<num>") "Add a specific depth parameter to AI Estimate solver. Defaults to 4."
   , Option ['t'] ["twoplayer"] (NoArg TwoPlayer) "Play two player game locally."
@@ -176,8 +176,7 @@ handleMoveInputVerbose game (MoveInput moveStr : rest) = do
             putStrLn $ "Parsed move: " ++ show move
             putStrLn "Board after:"
             putStrLn $ showPrettyGame newGame
-            putStrLn $ "Board rating in current state: " ++ show (rateGame newGame)
-            putStrLn $ "Estimated team victory: " ++ show (whoWillWin newGame)
+            putStrLn $ "Board rating in current state: " ++ show (rateGame newGame) ++ if (rateGame newGame > 0) then ". White is probably winning." else if (rateGame newGame < 0) then ". Black is probably winning." else ". The game is very close!"
         Nothing   -> putStrLn "Invalid move input."
     -- Continue processing other flags in 'rest' if necessary
 handleMoveInputVerbose game (_ : rest) = handleMoveInput game rest -- Skip other flag types

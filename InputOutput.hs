@@ -191,4 +191,4 @@ putBestMoveVerbose game = do
   putStrLn $ "You should make the move: " ++ show bm
   putStrLn "Board after "
   putStrLn $ showPrettyGame newGame
-  putStrLn $ "Board rating in current state: " ++ show (rateGame newGame)
+  putStrLn $ "Board rating in current state: " ++ show (rateGame newGame) ++ if (rateGame newGame > 0) then ". White is probably winning." else if (rateGame newGame < 0) then ". Black is probably winning." else ". The game is very close!"
