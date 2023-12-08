@@ -1,14 +1,15 @@
 module InputOutput where
 
 import Chess
-import Data.List
+import Data.Char (toLower)
+import Data.List (intercalate, intersperse)
 import Data.List.Split (splitOn)
 import Data.Maybe
 import Debug.Trace
 import Solver
 import System.IO
 
---                                        PRETTY PRINTING
+--                                            PRETTY PRINTING
 
 showPiecePretty :: Piece -> String
 showPiecePretty (Rook, Black) = " ♖ "
@@ -45,37 +46,31 @@ showPrettyGame (board, side, turn) =
       prettyBoard = unlines (intersperse separator rows) ++ "\n " ++ coordinateLine
    in "Current side: " ++ (show side) ++ "\n" ++ "Number of turns left: " ++ (show turn) ++ "\n" ++ prettyBoard
 
-showPrettyMove :: Maybe Move -> String
-showPrettyMove move =
+intToLetter :: Int -> String
+intToLetter i =
+  let letterAssociation = zip [1 .. 8] ["a", "b", "c", "d", "e", "f", "g", "h"]
+   in case lookup i letterAssociation of
+        Just x -> x
+        Nothing -> error "can't find associated letter"
+
+-- Move must be in bound of board or result would be wrong or throw error
+showPrettyMaybeMove :: Maybe Move -> String
+showPrettyMaybeMove move =
   case move of
-    Nothing -> "no move"
+    Nothing -> "Game is over, no move to be made"
     Just (((x1, y1), (pType, side)), (x2, y2)) ->
-      let coorAssociation = zip [1 .. 8] ["a", "b", "c", "d", "e", "f", "g", "h"]
-          startx = case lookup x1 coorAssociation of
-            Just x -> x
-            Nothing -> error "invalid move"
-          start = startx ++ show y1
-          endx = case lookup x2 coorAssociation of
-            Just x -> x
-            Nothing -> error "invalid move"
-          end = endx ++ show y2
+      let start = intToLetter x1 ++ show y1
+          end = intToLetter x2 ++ show y2
        in "You should make the move " ++ show side ++ " " ++ show pType ++ ": " ++ start ++ " -> " ++ end
 
-showPrettyMove2 :: Move -> String
-showPrettyMove2 (((x1, y1), (pType, side)), (x2, y2)) =
-      let coorAssociation = zip [1 .. 8] ["a", "b", "c", "d", "e", "f", "g", "h"]
-          startx = case lookup x1 coorAssociation of
-            Just x -> x
-            Nothing -> error "invalid move"
-          start = startx ++ show y1
-          endx = case lookup x2 coorAssociation of
-            Just x -> x
-            Nothing -> error "invalid move"
-          end = endx ++ show y2
-       in "You should make the move " ++ show side ++ " " ++ show pType ++ ": " ++ start ++ " -> " ++ end
+showPrettyMove :: Move -> String
+showPrettyMove (((x1, y1), (pType, side)), (x2, y2)) =
+  let start = intToLetter x1 ++ show y1
+      end = intToLetter x2 ++ show y2
+   in "You should make the move " ++ show side ++ " " ++ show pType ++ ": " ++ start ++ " -> " ++ end
 
 --                                        TEXT REPRESENTATION
---                                           GAME TO FEN
+--                                            GAME TO FEN
 pieceToString :: Maybe Piece -> String
 pieceToString piece =
   case piece of
@@ -173,14 +168,22 @@ loadGame filepath = do
   let game = readGame gameContent
   return game
 
---                                    OUTPUTTING SOLVER RESULT
+--                                        OUTPUTTING SOLVER RESULT
 
 putBestMove :: Game -> IO ()
 putBestMove game = do
   let bm = bestMove game
       newGame = makeUnSafeMove game bm
-  putStrLn $ "You should make the move: " ++ show bm
+  putStrLn $ "You should make the move: " ++ showPrettyMove bm
 
+verboseRatingPrint :: Game -> IO ()
+verboseRatingPrint game
+  | rating > 0 = putStrLn $ ratingMessage ++ ". White is winning."
+  | rating < 0 = putStrLn $ ratingMessage ++ ". Black is winning."
+  | otherwise = putStrLn $ ratingMessage ++ ". The game is very close!"
+  where
+    rating = rateGame game
+    ratingMessage = "Board rating in current state: " ++ show rating
 
 putBestMoveVerbose :: Game -> IO ()
 putBestMoveVerbose game = do
@@ -188,7 +191,51 @@ putBestMoveVerbose game = do
       newGame = makeUnSafeMove game bm
   putStrLn "Initial board: "
   putStrLn $ showPrettyGame game
-  putStrLn $ "You should make the move: " ++ show bm
+  putStrLn $ "You should make the move: " ++ showPrettyMove bm
   putStrLn "Board after "
   putStrLn $ showPrettyGame newGame
-  putStrLn $ "Board rating in current state: " ++ show (rateGame newGame) ++ if (rateGame newGame > 0) then ". White is probably winning." else if (rateGame newGame < 0) then ". Black is probably winning." else ". The game is very close!"
+  verboseRatingPrint game
+
+--                                         READING USER'S INPUT
+toLowerString :: String -> String
+toLowerString = map toLower
+
+letters :: [Char]
+letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+
+letterToNum = zip letters [1 .. 8]
+
+digits :: [Char]
+digits = ['1', '2', '3', '4', '5', '6', '7', '8']
+
+digitToNum = zip digits [1 .. 8]
+
+-- Takes in a tuple of user input  like ("e2", "a2") and returns a corresponding (Pos, Pos) if valid
+readPos :: (String, String) -> Maybe (Pos, Pos)
+readPos ([letter1, digit1], [letter2, digit2]) =
+  do
+    -- if one of these return a nothing, for ex: p9, then return nothing
+    x1 <- lookup letter1 letterToNum
+    y1 <- lookup digit1 digitToNum
+    x2 <- lookup letter2 letterToNum
+    y2 <- lookup digit2 digitToNum
+    return ((x1, y1), (x2, y2))
+readPos _ = Nothing
+
+readMove :: String -> Game -> Maybe Move
+readMove line (board, _, _) =
+  let split :: [String]
+      split = filter (not . null) (words line)
+   in -- check if input is two strings
+      case split of
+        [first, sec] ->
+          case readPos (toLowerString first, toLowerString sec) of
+            -- if the input format is not "e2 e4" --> return Nothing
+            Nothing -> Nothing
+            Just ((x1, y1), (x2, y2)) ->
+              case lookup (x1, y1) board of
+                -- if there is no piece at the start
+                Nothing -> Nothing
+                Just p -> Just (((x1, y1), p), (x2, y2))
+        -- if the input format is not two strings
+        _ -> Nothing

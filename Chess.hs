@@ -19,7 +19,7 @@ type Square = (Pos, Piece)
 
 type Board = [Square]
 
-type Move = (Square, Pos) -- deriving (Show, Eq) FOR LATER **
+type Move = (Square, Pos)
 
 type Game = (Board, Side, Int)
 

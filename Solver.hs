@@ -5,10 +5,19 @@ import Data.List
 import Data.Maybe
 import Debug.Trace
 
+--                                                    HELPER FUNCTIONS
 allNextGame :: Game -> [Game]
 allNextGame game@(board, side, turn) =
   let allMoves = allLegalMoves game
    in [makeUnSafeMove game move | move <- allMoves]
+
+-- Generate an association list of all the next possible game states and the moves that lead to each of them
+gameMoveAssociation :: Game -> [(Game, Move)]
+gameMoveAssociation game@(board, side, turn) =
+  let allMoves = allLegalMoves game
+   in [(makeUnSafeMove game move, move) | move <- allMoves]
+
+--                                                     SPRINT 2
 
 whoWillWin :: Game -> Winner
 whoWillWin game@(_, side, _) =
@@ -27,13 +36,8 @@ whoWillWin game@(_, side, _) =
             | otherwise = Tie
        in winner
 
--- Generate an association list of all the next possible game states and the moves that lead to each of them
-gameMoveAssociation :: Game -> [(Game, Move)]
-gameMoveAssociation game@(board, side, turn) =
-  let allMoves = allLegalMoves game
-   in [(makeUnSafeMove game move, move) | move <- allMoves]
-
--- Generate the best move for the current plauer
+-- Generate the best move for the current player
+-- Does not have dynamic depth
 bestMove :: Game -> Move
 bestMove game@(_, side, _) =
   let outcomes :: [(Winner, Move)]
@@ -51,12 +55,7 @@ bestMove game@(_, side, _) =
 
 -- TODO: Breadth first find best move maybe, so you can check mate in 1 instead of 5
 
--- -- Optimized via folds
--- -- TODO: edge cases if the position is winning / losing
--- rateGame :: Game -> Rating -- check if the game is won and also tie! if so, give highest possible marks
--- rateGame (board, side, int) =
---   let (white, black) = foldr (\(_, (pieceType, side)) (white, black) -> if side == White then (white + pieceValue pieceType, black) else (white, black + pieceValue pieceType)) (0, 0) board
---    in white - black
+--                                                     SPRINT 3
 
 typeValue :: PieceType -> Int
 typeValue Pawn = 1
@@ -70,7 +69,6 @@ pieceValue (pieceType, White) = typeValue pieceType
 pieceValue (pieceType, Black) = -(typeValue pieceType)
 
 -- Optimized via foldsshow
--- TODO: edge cases if the position is winning / losing
 rateGame :: Game -> Rating
 rateGame (board, side, int) =
   foldr (\(_, piece) total -> total + pieceValue piece) 0 board
