@@ -61,13 +61,13 @@ showPrettyMaybeMove move =
     Just (((x1, y1), (pType, side)), (x2, y2)) ->
       let start = intToLetter x1 ++ show y1
           end = intToLetter x2 ++ show y2
-       in "You should make the move " ++ show side ++ " " ++ show pType ++ ": " ++ start ++ " -> " ++ end
+       in show side ++ " " ++ show pType ++ ": " ++ start ++ " -> " ++ end
 
 showPrettyMove :: Move -> String
 showPrettyMove (((x1, y1), (pType, side)), (x2, y2)) =
   let start = intToLetter x1 ++ show y1
       end = intToLetter x2 ++ show y2
-   in "You should make the move " ++ show side ++ " " ++ show pType ++ ": " ++ start ++ " -> " ++ end
+   in show side ++ " " ++ show pType ++ ": " ++ start ++ " -> " ++ end
 
 --                                        TEXT REPRESENTATION
 --                                            GAME TO FEN

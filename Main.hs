@@ -30,7 +30,7 @@ recurReadInput game isInteractive = do
               startTurn gameAfterSolverMove isInteractive
             else startTurn gameAfterPlayerMove isInteractive
 
--- print the current turn's board and recursively ask for input
+-- Print the current turn's board and recursively ask for input
 startTurn :: Game -> Bool -> IO ()
 startTurn game@(board, sideOfPlayer, turnNum) isInteractive = do
   putStrLn ""
@@ -49,7 +49,6 @@ startTwoPlayer game = startTurn game False
 --                                                    AI INTERACTIVE
 
 -- MUST BE COMBINABLE WITH -D
--- ??? using gameMoveAssociation that's hella slow
 determineDynamicDepth :: Game -> Int
 determineDynamicDepth game =
   case (length (gameMoveAssociation game)) of
@@ -82,11 +81,6 @@ options =
     Option ['m'] ["move"] (ReqArg MoveInput "move") "Input a move in <d2 d4> and print out the result ",
     Option ['i'] ["interactive"] (NoArg Interactive) "Interactive play with AI."
   ]
-
-
--- 2 issues
--- interactive does not support -d.   
--- move flag does not check 
 
 main :: IO ()
 main = do
@@ -138,19 +132,19 @@ putPerfectMoveVerbose game flags =
 
 --                                               MOVE FLAG
 
--- move flag is just someone moving
-
 handleMoveInput :: Game -> [Flag] -> IO ()
 handleMoveInput _ [] = putStrLn "No move input provided."
 handleMoveInput game (MoveInput moveStr : rest) = do
   putStrLn $ "Received move input: " ++ moveStr
   case readMove moveStr game of
-    Just move -> do
-      let newGame = makeUnSafeMove game move
-      putStrLn $ "Parsed move: " ++ show move
-      putStrLn "Board after:"
-      putStrLn $ showPrettyGame newGame
     Nothing -> putStrLn "Invalid move input."
+    Just move -> do
+      case makeMove game move of
+        Nothing -> putStrLn $ (showPrettyMove move) ++ "is not a valid move."
+        Just newGame -> do
+          putStrLn $ "Parsed move: " ++ showPrettyMove move
+          putStrLn "Board after:"
+          putStrLn $ showPrettyGame newGame
 -- Continue processing other flags in 'rest' if necessary
 handleMoveInput game (_ : rest) = handleMoveInput game rest -- Skip other flag types
 
@@ -159,38 +153,39 @@ handleMoveInputVerbose _ [] = putStrLn "No move input provided."
 handleMoveInputVerbose game (MoveInput moveStr : rest) = do
   putStrLn $ "Received move input: " ++ moveStr
   case readMove moveStr game of
-    Just move -> do
-      let newGame = makeUnSafeMove game move
-      putStrLn $ "Parsed move: " ++ show move
-      putStrLn "Board after:"
-      putStrLn $ showPrettyGame newGame
-      verboseRatingPrint newGame
     Nothing -> putStrLn "Invalid move input."
+    Just move -> do
+      case makeMove game move of 
+        Nothing -> putStrLn $ (showPrettyMove move) ++ "is not a valid move."
+        Just newGame -> do
+          putStrLn $ "Parsed move: " ++ showPrettyMove move
+          putStrLn "Board after:"
+          putStrLn $ showPrettyGame newGame
+          verboseRatingPrint newGame
 -- Continue processing other flags in 'rest' if necessary
-handleMoveInputVerbose game (_ : rest) = handleMoveInput game rest -- Skip other flag types
+handleMoveInputVerbose game (_ : rest) = handleMoveInputVerbose game rest -- Skip other flag types
 
 --                                                 NO FLAG
 putGoodMove :: Game -> [Flag] -> IO ()
 putGoodMove game flags =
   case getDepthFromFlags flags of
     Nothing -> error "Invalid depth input"
-    -- TODO: CHECK DYNAMIC DEPTH???, currently 5, l
-    Just depth -> putStrLn $ showPrettyMaybeMove (snd (moveEstimate game depth))
+    Just depth -> putStrLn $ "You should make move: " ++  showPrettyMaybeMove (snd (moveEstimate game depth))
 
 putGoodMoveVerbose :: Game -> [Flag] -> IO ()
 putGoodMoveVerbose game flags =
   case getDepthFromFlags flags of
     Nothing -> error "Invalid depth input"
     Just depth -> do
-      let maybeMove = snd (moveEstimate game depth)
-      case maybeMove of
-        Nothing -> error "Failed to estimate move"
+      case snd (moveEstimate game depth) of
+        Nothing -> do 
+          putStrLn $ "Game is already won"
         Just em -> do
-          putStrLn $ showPrettyMove em
+          putStrLn $ "You should make move: " ++ showPrettyMove em
           let newGame = makeUnSafeMove game em
-          putStrLn "Initial board: "
+          putStrLn "Initial board:"
           putStrLn $ showPrettyGame game
-          putStrLn "Board after "
+          putStrLn "Board after:"
           putStrLn $ showPrettyGame newGame
           verboseRatingPrint newGame
 
