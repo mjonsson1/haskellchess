@@ -50,7 +50,7 @@ initialBoard =
        ]
 
 initialGame :: Game
-initialGame = (initialBoard, White, 50)
+initialGame = (initialBoard, White, 200)
 
 emptyBoard :: Board
 emptyBoard = []

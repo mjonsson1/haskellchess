@@ -26,7 +26,7 @@ recurReadInput game isInteractive depth = do
           if isInteractive
             then do
               putStrLn $ showPrettyGame gameAfterPlayerMove
-              putStrLn "Calculating solver move..."
+              putStrLn $ "Calculating solver move..." ++ " Depth: "++ show depth
               let gameAfterSolverMove = makeSolverMove gameAfterPlayerMove depth
               startTurn gameAfterSolverMove isInteractive depth
             else startTurn gameAfterPlayerMove isInteractive depth
@@ -39,8 +39,7 @@ startTurn game@(board, sideOfPlayer, turnNum) isInteractive depth = do
   putStrLn $ showPrettyGame game
   case whoHasWon (board, sideOfPlayer, turnNum) of
     Nothing -> do
-      if  isInteractive then putStrLn $ "Depth: " ++ show depth else
-        putStrLn ("Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
+      putStrLn $ ("Enter move for " ++ (toLowerString (show sideOfPlayer)) ++ " (in format: d2 d4): ")
       recurReadInput (board, sideOfPlayer, turnNum) isInteractive depth
     Just end -> case end of
       WinningSide side -> putStrLn (show side ++ " is the winner!")
@@ -57,7 +56,7 @@ determineDynamicDepth game =
   case (length (gameMoveAssociation game)) of
     n | n < 10 -> 8
     n | n >= 10 && n < 20 -> 7
-    n | n >= 20 && n < 30 -> 6
+    n | n >= 20 && n < 30 -> 5
     n | n >= 30 -> 5
 
 makeSolverMove :: Game -> Int -> Game
@@ -104,7 +103,7 @@ main = do
         then startTwoPlayer game
         else
           if Interactive `elem` flags
-            then 
+            then
               case getDepthFromFlags flags game of
               Nothing -> startInteractiveMode game (determineDynamicDepth game)
               Just depth ->  startInteractiveMode game depth
@@ -167,7 +166,7 @@ handleMoveInputVerbose game (MoveInput moveStr : rest) = do
   case readMove moveStr game of
     Nothing -> putStrLn "Invalid move input."
     Just move -> do
-      case makeMove game move of 
+      case makeMove game move of
         Nothing -> putStrLn $ (showPrettyMove move) ++ "is not a valid move."
         Just newGame -> do
           putStrLn $ "Parsed move: " ++ showPrettyMove move
@@ -190,7 +189,7 @@ putGoodMoveVerbose game flags =
     Nothing -> error "Invalid depth input"
     Just depth -> do
       case snd (moveEstimate game depth) of
-        Nothing -> do 
+        Nothing -> do
           putStrLn $ "Game is already won"
         Just em -> do
           putStrLn $ "You should make move: " ++ showPrettyMove em
